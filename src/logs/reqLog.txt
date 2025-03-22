@@ -697,3 +697,9 @@
 20240530	04:17:08	15a37cef-2754-47e5-8699-2bd906434350	PUT	undefined	/products/
 20240530	09:14:39	96562a40-4093-448f-a447-e7ddda24ea0b	POST	undefined	/auth
 20240530	09:16:18	165c2b44-7025-477e-b4ca-54fe56eed282	PUT	undefined	/products/gallery-images/6647bb8eb8d6143505d7b4f8
+20250322	15:41:18	93402127-c92c-4311-8c94-d501762c17f9	POST	undefined	/register
+20250322	15:41:39	cc21dfde-90cd-4971-8e6f-bf0fba432b71	POST	undefined	/register
+20250322	15:44:10	1fc87dd2-e268-4aae-94db-ef3a88ee1237	POST	undefined	/register
+20250322	15:45:02	307af057-a48e-4a26-a24f-58be1e06c1ae	POST	undefined	/register
+20250322	15:45:42	fba972c0-6310-48fb-b80b-6870be7e8d00	POST	undefined	/register
+20250322	15:46:08	9b4dfefd-2bcf-475b-a6d7-f9df158672ac	POST	undefined	/register

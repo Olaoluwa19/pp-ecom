@@ -33,25 +33,9 @@ const userSchema = new Schema(
       type: Number,
       required: true,
     },
-    street: {
-      type: String,
-      default: "",
-    },
-    apartment: {
-      type: String,
-      default: "",
-    },
-    zip: {
-      type: String,
-      default: "",
-    },
-    city: {
-      type: String,
-      default: "",
-    },
-    country: {
-      type: String,
-      default: "",
+    address: {
+      type: Schema.Types.ObjectId,
+      ref: "Address",
     },
   },
   { timestamps: true }
