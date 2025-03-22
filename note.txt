@@ -1,0 +1,14 @@
+To undo git init:
+- dir /a
+- ls -a
+- rm -rf .git
+
+verify if it's disabled:
+- git status.
+
+creating a new repo
+- git init
+- git add . (to stage all files)
+- git commit -m "initial commit"(first commit)
+- git remote add origin(link to the repo)
+- git push -u origin main
