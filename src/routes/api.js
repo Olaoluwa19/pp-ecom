@@ -3,16 +3,16 @@ const api = express.Router();
 const verifyJWT = require("../middleware/verifyJWT");
 
 //  ROUTES
-api.use("/", require("./routes/root"));
-api.use("/register", require("./routes/register"));
-api.use("/auth", require("./routes/auth"));
-api.use("/refresh", require("./routes/refresh"));
-api.use("/logout", require("./routes/logout"));
+api.use("/", require("./root"));
+api.use("/register", require("./register"));
+api.use("/auth", require("./auth"));
+api.use("/refresh", require("./refresh"));
+api.use("/logout", require("./logout"));
 
 api.use(verifyJWT);
-api.use("/products", require("./routes/api/products"));
-api.use("/categories", require("./routes/api/categories"));
-api.use("/orders", require("./routes/api/orders"));
-api.use("/users", require("./routes/api/users"));
+api.use("/products", require("./API/products"));
+api.use("/categories", require("./API/categories"));
+api.use("/orders", require("./API/orders"));
+api.use("/users", require("./API/users"));
 
 module.exports = api;

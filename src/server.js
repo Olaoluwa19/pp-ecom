@@ -3,12 +3,10 @@ const http = require("http");
 const mongoose = require("mongoose");
 const app = require("./app");
 const connectDB = require("./config/dbConn");
-const socketIo = require("socket.io");
 
 const PORT = process.env.PORT || 8000;
 
 const server = http.createServer(app);
-const io = socketIo(server);
 
 const startServer = async () => {
   try {
