@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const User = require("../model/User");
 const bcrypt = require("bcryptjs");
 const Address = require("../model/Address");
+const { validatePassword, responseMessage } = require("../service/utils");
 
 const createNewUser = async (req, res) => {
   const { username, email, phone, password, address, roles } = req.body;
@@ -30,24 +31,28 @@ const createNewUser = async (req, res) => {
   }
 
   // check if password matches regex
-  const regex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{6,}$/;
-  if (!regex.test(password)) {
-    return res.status(400).json({
-      success: false,
-      message:
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number",
-    });
-  }
+  validatePassword(password, res);
+  // const regex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{6,}$/;
+  // if (!regex.test(password)) {
+  //   return res.status(400).json({
+  //     success: false,
+  //     message:
+  //       "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+  //   });
+  // }
 
   const duplicate = await User.findOne({
     username: username,
     roles: roles,
   }).exec();
 
-  if (duplicate)
-    return res
-      .status(409)
-      .json({ success: false, message: "User already exists. Please login." }); // conflict
+  if (duplicate) {
+    responseMessage(res, 409, false, "User already exists. Please login.");
+    // return res
+    //   .status(409)
+    //   .json({ success: false, message: "User already exists. Please login." }); // conflict
+  }
+
   try {
     // create address document
     const { street, apartment, zip, city, country } = address;
