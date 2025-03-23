@@ -1,67 +1,114 @@
-const Category = require("../../model/apiModel/Category");
+const mongoose = require("mongoose");
+const {
+  findCategory,
+  findCategoryById,
+  createCategoryFields,
+  deleteCategoryField,
+  updateAndSaveCategoryFields,
+} = require("../../services/categoryUtils");
+const { responseMessage } = require("../../services/utils");
 
 const getAllCategories = async (req, res) => {
-  const categoryList = await Category.find();
+  // find all categories
+  const categoryList = await findCategory();
   if (!categoryList)
-    return res.status(204).json({ message: "No Categoriess Found." });
+    return responseMessage(res, 204, false, "No Categories Found.");
 
   res.json(categoryList);
 };
 
 const createNewCategory = async (req, res) => {
+  // check if name is provided.
   if (!req?.body?.name) {
-    return res
-      .status(400)
-      .json({ message: "Name required to create category" });
+    return responseMessage(res, 400, false, "Name required to create category");
   }
   try {
-    const result = await Category.create({
-      name: req.body.name,
-      icon: req.body.icon,
-      color: req.body.color,
-    });
+    // create category field
+    const result = await createCategoryFields(req);
     res.status(201).json(result);
   } catch (error) {
     console.error(error);
+    return responseMessage(
+      res,
+      400,
+      false,
+      `Error creating category: ${error.message}`
+    );
   }
 };
 
 const updateCategory = async (req, res) => {
-  if (!req?.body?.id) {
-    return res.status(400).json({ message: "ID parameter is required" });
+  const { id } = req.body;
+
+  // check if ID is provided.
+  if (!id) {
+    return responseMessage(res, 400, false, "ID parameter is required");
   }
 
-  if (req.body?.name) category.name = req.body.name;
-  if (req.body?.icon) category.icon = req.body.icon;
-  if (req.body?.color) category.color = req.body.color;
+  //check if ID is valid.
+  if (!mongoose.isValidObjectId(id))
+    return responseMessage(res, 400, false, `No Category ID matches ${id}.`);
 
-  const result = await category.save();
-  res.json(result);
+  // check if category exists.
+  const category = await findCategoryById(id);
+
+  if (!category)
+    return responseMessage(res, 204, false, `No category found with ID: ${id}`);
+
+  try {
+    //update and save Category
+    const result = await updateAndSaveCategoryFields(category, req);
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    return responseMessage(
+      res,
+      400,
+      false,
+      `Error updating category: ${error.message}`
+    );
+  }
 };
 
 const deleteCategory = async (req, res) => {
-  if (!req?.body?.id)
-    return res.status(400).json({ message: "Category ID required." });
+  const { id } = req.body;
 
-  const category = await Category.findOne({ _id: req.body.id }).exec();
+  // check if ID is provided.
+  if (!id) return responseMessage(res, 400, false, "Category ID required.");
+
+  // check if ID is valid.
+  if (!mongoose.isValidObjectId(id))
+    return responseMessage(res, 400, false, `No Category ID matches ${id}.`);
+
+  // find category by ID.
+  const category = await findCategoryById(id);
   if (!category) {
-    return res
-      .status(204)
-      .json({ message: `No category ID matches ${req.body.id}.` });
+    return responseMessage(
+      res,
+      204,
+      false,
+      `No category ID matches ${req.body.id}.`
+    );
   }
-  const result = await category.deleteOne({ _id: req.body.id });
+
+  // delete category
+  const result = await deleteCategoryField(id);
   res.json(result);
 };
 
 const getCategory = async (req, res) => {
-  if (!req?.params?.id)
-    return res.status(400).json({ message: "Category ID required." });
+  const { id } = req.params;
+  // check if ID is provided.
+  if (!id) return responseMessage(res, 204, false, "Category ID required.");
 
-  const category = await Category.findOne({ _id: req.params.id }).exec();
+  // check if ID is valid.
+  if (!mongoose.isValidObjectId(id))
+    return responseMessage(res, 400, false, `No Category ID matches ${id}.`);
+
+  // find category by ID.
+  const category = await findCategoryById(id);
   if (!category) {
-    return res
-      .status(204)
-      .json({ message: `No Category ID matches ${req.params.id}.` });
+    return responseMessage(res, 204, false, `No Category ID matches ${id}.`);
   }
   res.json(category);
 };

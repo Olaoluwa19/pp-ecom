@@ -1,97 +1,90 @@
-const mongoose = require("mongoose");
-const User = require("../model/User");
 const bcrypt = require("bcryptjs");
-const Address = require("../model/Address");
-const { validatePassword, responseMessage } = require("../service/utils");
+const { validatePassword, responseMessage } = require("../services/utils");
+const {
+  checkDuplicateUser,
+  createUser,
+  getPopulatedUser,
+} = require("../services/userUtils");
+const { createAddress } = require("../services/addressUtils");
 
 const createNewUser = async (req, res) => {
   const { username, email, phone, password, address, roles } = req.body;
 
   // validate user roles
   if (![2000, 1995, 5919].includes(roles)) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Invalid role selected" });
+    return responseMessage(res, 400, false, "Invalid role selected");
   }
 
   //check for missing fields
   if (!username || !email || !phone || !password || !roles) {
-    return res.status(400).json({
-      success: false,
-      message: "Missing required fields",
-    });
+    return responseMessage(res, 400, false, "Missing required fields");
   }
 
   // check if password length greater than 6
   if (password.length < 6) {
-    return res.status(400).json({
-      success: false,
-      message: "Password must be at least 6 characters",
-    });
+    return responseMessage(
+      res,
+      400,
+      false,
+      "Password must be at least 6 characters"
+    );
   }
 
   // check if password matches regex
-  validatePassword(password, res);
-  // const regex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{6,}$/;
-  // if (!regex.test(password)) {
-  //   return res.status(400).json({
-  //     success: false,
-  //     message:
-  //       "Password must contain at least one uppercase letter, one lowercase letter, and one number",
-  //   });
-  // }
+  if (!validatePassword(password)) {
+    return responseMessage(
+      res,
+      400,
+      false,
+      "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+    );
+  }
 
-  const duplicate = await User.findOne({
-    username: username,
-    roles: roles,
-  }).exec();
+  // check for duplicate user
+
+  const duplicate = await checkDuplicateUser(username, roles);
 
   if (duplicate) {
-    responseMessage(res, 409, false, "User already exists. Please login.");
-    // return res
-    //   .status(409)
-    //   .json({ success: false, message: "User already exists. Please login." }); // conflict
+    return responseMessage(
+      res,
+      409,
+      false,
+      "User already exists. Please login."
+    );
+    // conflict
   }
 
   try {
     // create address document
-    const { street, apartment, zip, city, country } = address;
-
-    const addressDoc = await Address.create({
-      street,
-      apartment,
-      zip,
-      city,
-      country,
-    });
+    const addressDoc = await createAddress(address);
 
     // encrypt the password
-    const hashedPwd = await bcrypt.hash(req.body.password, 10);
-    const newUser = await User.create({
+    const hashedPwd = await bcrypt.hash(password, 10);
+
+    // createUser document
+    const userData = {
       username,
-      roles,
-      password: hashedPwd,
       email,
       phone,
+      password: hashedPwd,
       address: addressDoc._id,
-    });
+      roles,
+    };
 
-    const populatedUser = await User.findOne({ _id: newUser._id })
-      .select("-password")
-      .populate({
-        path: "address",
-        select: "-_id -createdAt -updatedAt -zip -apartment",
-      })
-      .exec();
+    const newUser = await createUser(userData, addressDoc._id);
+
+    const populatedUser = await getPopulatedUser(newUser._id);
 
     console.log(populatedUser);
     return res.status(201).json(populatedUser);
   } catch (error) {
-    // throw new Error(`Error creating user: ${error.message}`);
     console.log(error);
-    return res.status(400).json({
-      message: `Error creating user: ${error.message}`,
-    });
+    return responseMessage(
+      res,
+      400,
+      false,
+      `Error creating user: ${error.message}`
+    );
   }
 };
 

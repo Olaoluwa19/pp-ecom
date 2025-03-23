@@ -1,11 +1,22 @@
 const mongoose = require("mongoose");
 const Product = require("../../model/apiModel/Product");
 // const uploadOptions = require("../../middleware/productImageHandler");
+const {
+  validMongooseId,
+  findProduct,
+  getImage,
+  findUserById,
+  findCategoryById,
+  createProductFields,
+} = require("../../services/productUtils");
+const Category = require("../../model/apiModel/Category");
+const { responseMessage } = require("../../services/utils");
 
 const getAllProduct = async (req, res) => {
-  const products = await Product.find().populate("category");
+  // find all products
+  const products = await findProduct();
   if (!products) {
-    return res.status(204).json({ message: "No Products found." });
+    return responseMessage(res, 204, false, "No Products found.");
   }
 
   res.json(products);
@@ -14,6 +25,8 @@ const getAllProduct = async (req, res) => {
 const createNewProduct = async (req, res) => {
   try {
     const { user, name, image, description, countInStock, category } = req.body;
+
+    // check for required fields
     if (
       !user ||
       !name ||
@@ -22,42 +35,59 @@ const createNewProduct = async (req, res) => {
       !countInStock ||
       !category
     ) {
-      return res.status(400).json({ message: "Required fields are missing" });
+      return responseMessage(res, 400, false, "Required fields are missing");
     }
 
+    // get file
     const file = req.file;
-    if (!file) return res.status(400).json({ message: "No files detected." });
+    if (!file) return responseMessage(res, 400, false, "No files detected.");
 
-    if (!mongoose.isValidObjectId(user))
+    // check if uder ID is valid
+    if (!validMongooseId(user))
       return res.status(400).json({ message: `No user ID matches ${user}.` });
 
-    if (!mongoose.isValidObjectId(category))
-      return res
-        .status(400)
-        .json({ message: `No category ID matches ${category}.` });
+    // check if user exists
+    const validUser = await findUserById(user);
+    if (!validUser)
+      return responseMessage(
+        res,
+        204,
+        false,
+        "No User matches the ID provided"
+      );
 
-    const fileName = req.file.filename;
-    const basePath = `${req.protocol}://${req.get("host")}/public/upload/`;
-    const uploadedImage = `${basePath}${fileName}`;
+    // check if category ID is valid
+    if (!validMongooseId(category))
+      return responseMessage(
+        res,
+        400,
+        false,
+        `No category ID matches ${category}.`
+      );
 
-    const result = await Product.create({
-      user: user,
-      name: name,
-      image: uploadedImage,
-      description: description,
-      richDescription: req.body.richDescription,
-      brand: req.body.brand,
-      price: req.body.price,
-      category: category,
-      countInStock: countInStock,
-      rating: req.body.rating,
-      numReviews: req.body.numReviews,
-      isFeatured: req.body.isFeatured,
-    });
+    // check if category exists
+    const validCategory = await findCategoryById(category);
+    if (!validCategory)
+      return responseMessage(
+        res,
+        204,
+        false,
+        "No Category matches the ID provided"
+      );
+
+    const uploadedImage = await getImage(req);
+
+    const result = await createProductFields(
+      req,
+      validUser,
+      uploadedImage,
+      validCategory
+    );
+
     res.status(201).json(result);
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: `Error in creating product` });
+    console.error(error);
+    return responseMessage(res, 500, false, `Error in creating product`);
   }
 };
 
