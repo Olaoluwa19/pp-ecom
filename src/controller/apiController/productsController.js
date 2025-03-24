@@ -4,7 +4,7 @@ const Product = require("../../model/apiModel/Product");
 const {
   validMongooseId,
   findProductAndPopulateCategory,
-  // getImage,
+  getImage,
   findUserById,
   findCategoryById,
   createProductFields,
@@ -27,20 +27,14 @@ const createNewProduct = async (req, res) => {
   const { user, name, image, description, countInStock, category } = req.body;
 
   // check for required fields
-  if (
-    !user ||
-    !name ||
-    // !image ||
-    !description ||
-    !countInStock ||
-    !category
-  ) {
+  if (!user || !name || !description || !countInStock || !category) {
     return responseMessage(res, 400, false, "Required fields are missing");
   }
 
-  // get file
-  // const file = req.file;
-  // if (!file) return responseMessage(res, 400, false, "No files detected.");
+  // get image file
+  const file = req.file;
+  if (!file)
+    return responseMessage(res, 400, false, "No image files detected.");
 
   // check if uder ID is valid
   if (!validMongooseId(user))
@@ -70,12 +64,9 @@ const createNewProduct = async (req, res) => {
       "No Category matches the ID provided"
     );
 
-  // const uploadedImage = await getImage(req);
+  const uploadedImage = await getImage(req);
   try {
-    const result = await createProductFields(
-      req
-      // uploadedImage,
-    );
+    const result = await createProductFields(req, uploadedImage);
 
     const populatedResult = await populateProductCategoryField(result);
     console.log(populatedResult);

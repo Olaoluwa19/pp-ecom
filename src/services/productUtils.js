@@ -11,13 +11,13 @@ const findProductAndPopulateCategory = async () => {
   return await Product.find().populate("category");
 };
 
-// const getImage = async (request) => {
-//   const fileName = request.file.filename;
-//   const basePath = `${request.protocol}://${request.get(
-//     "host"
-//   )}/public/upload/`;
-//   return `${basePath}${fileName}`;
-// };
+const getImage = async (request) => {
+  const fileName = request.file.filename;
+  const basePath = `${request.protocol}://${request.get(
+    "host"
+  )}/public/upload/`;
+  return `${basePath}${fileName}`;
+};
 
 const findUserById = async (userId) => {
   return await User.findOne({ _id: userId }).exec();
@@ -51,7 +51,7 @@ const populateProductCategoryField = async (obj) => {
 module.exports = {
   validMongooseId,
   findProductAndPopulateCategory,
-  // getImage,
+  getImage,
   findUserById,
   findCategoryById,
   createProductFields,

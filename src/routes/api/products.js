@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const uploadOptions = require("../../middleware/productImageHandler");
+const { uploadOptions } = require("../../middleware/imageHandler");
 const productsController = require("../../controller/APIController/productsController");
 const ROLES_LIST = require("../../config/roles_list");
 const verifyRoles = require("../../middleware/verifyRoles");
