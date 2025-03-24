@@ -3,18 +3,19 @@ const Product = require("../../model/apiModel/Product");
 // const uploadOptions = require("../../middleware/productImageHandler");
 const {
   validMongooseId,
-  findProduct,
-  getImage,
+  findProductAndPopulateCategory,
+  // getImage,
   findUserById,
   findCategoryById,
   createProductFields,
+  populateProductCategoryField,
 } = require("../../services/productUtils");
 const Category = require("../../model/apiModel/Category");
 const { responseMessage } = require("../../services/utils");
 
 const getAllProduct = async (req, res) => {
   // find all products
-  const products = await findProduct();
+  const products = await findProductAndPopulateCategory();
   if (!products) {
     return responseMessage(res, 204, false, "No Products found.");
   }
@@ -23,68 +24,62 @@ const getAllProduct = async (req, res) => {
 };
 
 const createNewProduct = async (req, res) => {
-  try {
-    const { user, name, image, description, countInStock, category } = req.body;
+  const { user, name, image, description, countInStock, category } = req.body;
 
-    // check for required fields
-    if (
-      !user ||
-      !name ||
-      !image ||
-      !description ||
-      !countInStock ||
-      !category
-    ) {
-      return responseMessage(res, 400, false, "Required fields are missing");
-    }
+  // check for required fields
+  if (
+    !user ||
+    !name ||
+    // !image ||
+    !description ||
+    !countInStock ||
+    !category
+  ) {
+    return responseMessage(res, 400, false, "Required fields are missing");
+  }
 
-    // get file
-    const file = req.file;
-    if (!file) return responseMessage(res, 400, false, "No files detected.");
+  // get file
+  // const file = req.file;
+  // if (!file) return responseMessage(res, 400, false, "No files detected.");
 
-    // check if uder ID is valid
-    if (!validMongooseId(user))
-      return res.status(400).json({ message: `No user ID matches ${user}.` });
+  // check if uder ID is valid
+  if (!validMongooseId(user))
+    return responseMessage(res, 400, false, `Invalid user ID: ${user}.`);
 
-    // check if user exists
-    const validUser = await findUserById(user);
-    if (!validUser)
-      return responseMessage(
-        res,
-        204,
-        false,
-        "No User matches the ID provided"
-      );
+  // check if user exists
+  const validUser = await findUserById(user);
+  if (!validUser)
+    return responseMessage(res, 400, false, "No User matches the ID provided");
 
-    // check if category ID is valid
-    if (!validMongooseId(category))
-      return responseMessage(
-        res,
-        400,
-        false,
-        `No category ID matches ${category}.`
-      );
-
-    // check if category exists
-    const validCategory = await findCategoryById(category);
-    if (!validCategory)
-      return responseMessage(
-        res,
-        204,
-        false,
-        "No Category matches the ID provided"
-      );
-
-    const uploadedImage = await getImage(req);
-
-    const result = await createProductFields(
-      req,
-      validUser,
-      uploadedImage,
-      validCategory
+  // check if category ID is valid
+  if (!validMongooseId(category))
+    return responseMessage(
+      res,
+      400,
+      false,
+      `Invalid category ID: ${category}.`
     );
 
-    res.status(201).json(result);
+  // check if category exists
+  const validCategory = await findCategoryById(category);
+  if (!validCategory)
+    return responseMessage(
+      res,
+      400,
+      false,
+      "No Category matches the ID provided"
+    );
+
+  // const uploadedImage = await getImage(req);
+  try {
+    const result = await createProductFields(
+      req
+      // uploadedImage,
+    );
+
+    const populatedResult = await populateProductCategoryField(result);
+    console.log(populatedResult);
+    res.status(201).json(populatedResult);
   } catch (error) {
     console.error(error);
     return responseMessage(res, 500, false, `Error in creating product`);
@@ -312,7 +307,7 @@ const getProduct = async (req, res) => {
 
 //     const userProducts = await Product.find({ user: req.params.userid })
 //       .populate("category")
-//       .sort({ dateCreated: -1 })
+//       .sort({ createdAt: -1 })
 //       .exec();
 //     if (!userProducts) {
 //       return res.status(204).json({ message: "No Products Found." });
@@ -333,7 +328,7 @@ const getUserProducts = async (req, res) => {
     }
     const userProducts = await Product.find({ user: userid })
       .populate("category")
-      .sort({ dateCreated: -1 })
+      .sort({ createdAt: -1 })
       .exec();
     if (!userProducts || userProducts.length === 0) {
       return res.status(204).json({ message: "No Products Found." });
