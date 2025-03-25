@@ -1,71 +1,64 @@
 const express = require("express");
 const router = express.Router();
 const { uploadOptions } = require("../../middleware/imageHandler");
-const productsController = require("../../controller/APIController/productsController");
+const {
+  getAllProduct,
+  createNewProduct,
+  updateProduct,
+  deleteProduct,
+  getProductCount,
+  getFeaturedProduct,
+  getProductCategory,
+  getUserProducts,
+  handleGalleryImages,
+  getProduct,
+} = require("../../controller/APIController/productsController");
 const ROLES_LIST = require("../../config/roles_list");
 const verifyRoles = require("../../middleware/verifyRoles");
 
 router
   .route("/")
-  .get(verifyRoles(ROLES_LIST.Editor), productsController.getAllProduct)
+  .get(verifyRoles(ROLES_LIST.Editor), getAllProduct)
   .post(
     verifyRoles(ROLES_LIST.Admin),
     uploadOptions.single("image"),
-    productsController.createNewProduct
+    createNewProduct
   )
   .put(
     verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin),
     uploadOptions.single("image"),
-    productsController.updateProduct
+    updateProduct
   )
-  .delete(
-    verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin),
-    productsController.deleteProduct
-  );
+  .delete(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), deleteProduct);
 
 router
   .route("/count")
-  .get(
-    verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin),
-    productsController.getProductCount
-  );
+  .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getProductCount);
 router
-  .route("/featured/:count?")
-  .get(
-    verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin),
-    productsController.getFeaturedProduct
-  );
+  .route("/featured/:count")
+  .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getFeaturedProduct);
 router
-  .route("/category/:category?")
-  .get(
-    verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin),
-    productsController.getProductCategory
-  );
+  .route("/category/:category")
+  .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getProductCategory);
 router
-  .route("/userproducts/:userid?")
-  .get(
-    verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin),
-    productsController.getUserProducts
-  );
+  .route("/userproducts/:userid")
+  .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getUserProducts);
 // router
 //   .route("/update/:userid?")
 //   .put(
 //     verifyRoles(ROLES_LIST.Admin),
 //     uploadOptions.single("image"),
-//     productsController.updateProduct
+//     updateProduct
 //   );
 router
-  .route("/gallery-images/:id?")
+  .route("/gallery-images/:id")
   .put(
     verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin),
     uploadOptions.array("images", 10),
-    productsController.handleGalleryImages
+    handleGalleryImages
   );
 router
   .route("/:id")
-  .get(
-    verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin),
-    productsController.getProduct
-  );
+  .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getProduct);
 
 module.exports = router;

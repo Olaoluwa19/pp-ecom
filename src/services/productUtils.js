@@ -1,30 +1,16 @@
 const Product = require("../model/apiModel/Product");
-const Category = require("../model/apiModel/Category");
 const User = require("../model/User");
-const mongoose = require("mongoose");
 
-const validMongooseId = (id) => {
-  return mongoose.isValidObjectId(id);
+const findProductbyId = async (id) => {
+  return await Product.findOne({ _id: id }).exec();
 };
 
-const findProductAndPopulateCategory = async () => {
+const findAllProductsAndPopulateCategory = async () => {
   return await Product.find().populate("category");
-};
-
-const getImage = async (request) => {
-  const fileName = request.file.filename;
-  const basePath = `${request.protocol}://${request.get(
-    "host"
-  )}/public/upload/`;
-  return `${basePath}${fileName}`;
 };
 
 const findUserById = async (userId) => {
   return await User.findOne({ _id: userId }).exec();
-};
-
-const findCategoryById = async (catId) => {
-  return await Category.findOne({ _id: catId }).exec();
 };
 
 const createProductFields = async (req, image) => {
@@ -48,12 +34,17 @@ const populateProductCategoryField = async (obj) => {
   return await Product.findOne({ _id: obj._id }).populate("category").exec();
 };
 
+const updateProductImages = async (req, product, imagePath) => {
+  if (req?.body?.images) product.images = imagePath;
+
+  return await product.save();
+};
+
 module.exports = {
-  validMongooseId,
-  findProductAndPopulateCategory,
-  getImage,
+  findProductbyId,
+  findAllProductsAndPopulateCategory,
   findUserById,
-  findCategoryById,
   createProductFields,
   populateProductCategoryField,
+  updateProductImages,
 };

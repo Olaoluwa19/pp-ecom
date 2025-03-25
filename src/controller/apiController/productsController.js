@@ -2,20 +2,26 @@ const mongoose = require("mongoose");
 const Product = require("../../model/apiModel/Product");
 // const uploadOptions = require("../../middleware/productImageHandler");
 const {
-  validMongooseId,
-  findProductAndPopulateCategory,
-  getImage,
+  findProductbyId,
+  findAllProductsAndPopulateCategory,
   findUserById,
-  findCategoryById,
   createProductFields,
   populateProductCategoryField,
+  updateProductImages,
 } = require("../../services/productUtils");
+
+const { findCategoryById } = require("../../services/categoryUtils");
 const Category = require("../../model/apiModel/Category");
-const { responseMessage } = require("../../services/utils");
+const {
+  validMongooseId,
+  responseMessage,
+  getImage,
+  getGalleryImages,
+} = require("../../services/utils");
 
 const getAllProduct = async (req, res) => {
   // find all products
-  const products = await findProductAndPopulateCategory();
+  const products = await findAllProductsAndPopulateCategory();
   if (!products) {
     return responseMessage(res, 204, false, "No Products found.");
   }
@@ -140,16 +146,21 @@ const updateProduct1 = async (req, res) => {
 const updateProduct = async (req, res) => {
   const { id, category } = req.body;
   if (!id)
-    return res.status(400).json({ message: "product id required is required" });
-  if (!mongoose.isValidObjectId(id))
-    return res.status(400).json({ message: `No product ID matches ${id}.` });
-  if (!mongoose.isValidObjectId(category))
-    return res
-      .status(400)
-      .json({ message: `No category ID matches ${category}.` });
+    return responseMessage(res, 400, false, "product id required is required");
+
+  if (!validMongooseId(id))
+    return responseMessage(res, 400, false, `No product ID matches ${id}.`);
+
+  if (!validMongooseId(category))
+    return responseMessage(
+      res,
+      400,
+      false,
+      `No category ID matches ${category}.`
+    );
 
   let file = req.file;
-  if (!file) return res.status(400).json({ message: "No files detected." });
+  if (!file) return responseMessage(res, 400, false, "No file detected.");
 
   const fileName = req.file.filename;
   const basePath = `${req.protocol}://${req.get("host")}/public/upload/`;
@@ -333,37 +344,43 @@ const getUserProducts = async (req, res) => {
 };
 
 const handleGalleryImages = async (req, res) => {
+  // check if product ID is present
+  if (!req?.params?.id)
+    return responseMessage(res, 400, false, "Product ID is required.");
+
+  // get product by ID
+  const product = await findProductbyId(req.params.id);
+  if (!product) {
+    return responseMessage(
+      res,
+      400,
+      false,
+      `No product matches the ID ${req.params.id}.`
+    );
+  }
+
+  if (!validMongooseId(req.params.id))
+    return responseMessage(
+      res,
+      400,
+      false,
+      `Invalid product ID: ${req.params.id}.`
+    );
+
+  // check if image files are present
+  const files = req.files;
+  if (!files) return responseMessage(res, 400, false, "No files detected.");
+
   try {
-    // const userid = req.params.user;
-    // if (!mongoose.isValidObjectId(userid)) {
-    //   return res.status(400).json({ message: `No user ID matches ${userid}.` });
-    // }
-    const product = await Product.findOne({ _id: req.body.id }).exec();
-    if (!product) {
-      return res
-        .status(400)
-        .json({ message: `No product matches the ID ${req.body.id}.` });
-    }
-    const files = req.files;
-    let imagePaths = [];
+    // get image files
+    const imagePaths = await getGalleryImages(req);
 
-    if (!files) return res.status(400).json({ message: "No files detected." });
-    const basePath = `${req.protocol}://${req.get("host")}/public/upload/`;
-    if (files) {
-      files.map((file) => {
-        imagePaths.push(`${basePath}${file.fileName}`);
-      });
-    }
-
-    if (req?.body?.images) product.images = imagePaths;
-
-    const result = await product.save();
+    // upload images to db
+    const result = await updateProductImages(req, product, imagePaths);
     res.status(201).json(result);
   } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .json({ message: `Error in uploading image gallery` });
+    console.error(error);
+    return responseMessage(res, 500, false, `Error in uploading image gallery`);
   }
 };
 
