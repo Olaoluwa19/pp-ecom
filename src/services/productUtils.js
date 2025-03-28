@@ -35,7 +35,7 @@ const populateProductCategoryField = async (obj) => {
 };
 
 const updateProductImages = async (req, product, imagePath) => {
-  if (req?.body?.images) product.images = imagePath;
+  product.images = imagePath;
 
   return await product.save();
 };

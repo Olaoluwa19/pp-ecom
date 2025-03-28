@@ -18,7 +18,7 @@ const verifyRoles = require("../../middleware/verifyRoles");
 
 router
   .route("/")
-  .get(verifyRoles(ROLES_LIST.Editor), getAllProduct)
+  .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getAllProduct)
   .post(
     verifyRoles(ROLES_LIST.Admin),
     uploadOptions.single("image"),

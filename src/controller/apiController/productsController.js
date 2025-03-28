@@ -370,6 +370,8 @@ const handleGalleryImages = async (req, res) => {
   // check if image files are present
   const files = req.files;
   if (!files) return responseMessage(res, 400, false, "No files detected.");
+  if (files.length > 10)
+    responseMessage(res, 400, false, "Maximum of 10 files allowed.");
 
   try {
     // get image files

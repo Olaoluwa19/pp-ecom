@@ -24,14 +24,14 @@ const getImage = async (req) => {
 };
 
 const getGalleryImages = async (req) => {
-  const files = req.body.files;
+  const files = req.files;
   let images = [];
 
   const basePath = `${req.protocol}://${req.get("host")}/public/upload/`;
 
-  if (files) {
-    images = files.map((image) => {
-      return `${basePath}${image}`;
+  if (files && files.length > 0) {
+    images = files.map((file) => {
+      return `${basePath}${file.filename}`;
     });
   }
 
