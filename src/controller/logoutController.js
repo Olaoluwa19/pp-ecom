@@ -31,4 +31,30 @@ const handleLogout = async (req, res) => {
   res.sendStatus(204);
 };
 
-module.exports = { handleLogout };
+const handleGoogleLogout = (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      console.error("Error logging out:", err);
+      return res.status(500).send("Internal server error");
+    }
+
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Error destroying session:", err);
+        return res.status(500).send("Internal server error");
+      }
+
+      // Clear the session cookie on the client
+      res.clearCookie("connect.sid", {
+        httpOnly: true,
+        secure: false, // Match sessionConfig
+        sameSite: "None",
+      });
+
+      res.redirect("/");
+      console.log("Google logout successfully.");
+    });
+  });
+};
+
+module.exports = { handleLogout, handleGoogleLogout };
