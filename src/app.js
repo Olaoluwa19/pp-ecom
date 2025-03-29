@@ -1,5 +1,8 @@
 require("dotenv").config();
 const express = require("express");
+const passport = require("passport");
+const session = require("express-session");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const app = express();
 const path = require("path");
 const cors = require("cors");
@@ -8,9 +11,39 @@ const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
 const cookieParser = require("cookie-parser");
 const credentials = require("./middleware/credentials");
+const sessionConfig = require("./config/sessionConfig");
 
 // custom middleware logger
 app.use(logger);
+
+// express session middleware
+app.use(session(sessionConfig));
+
+// passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+// google strategy
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "http://localhost:8000/auth/google/callback",
+    },
+    (accessToken, refreshToken, profile, done) => {
+      return done(null, profile);
+    }
+  )
+);
+
+// serialize user
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+passport.deserializeUser((user, done) => {
+  done(null, user);
+});
 
 // Handle options credential check before cors
 app.use(credentials);

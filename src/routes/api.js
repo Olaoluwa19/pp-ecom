@@ -5,7 +5,7 @@ const verifyJWT = require("../middleware/verifyJWT");
 //  ROUTES
 api.use("/", require("./root"));
 api.use("/register", require("./register"));
-api.use("/login", require("./auth"));
+api.use("/auth", require("./auth"));
 api.use("/refresh", require("./refresh"));
 api.use("/logout", require("./logout"));
 
