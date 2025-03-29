@@ -11,4 +11,10 @@ const sessionConfig = {
   saveUninitialized: true,
 };
 
-module.exports = sessionConfig;
+const googleConfig = {
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: "http://localhost:8000/auth/google/callback",
+};
+
+module.exports = { sessionConfig, googleConfig };

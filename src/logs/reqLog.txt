@@ -950,3 +950,8 @@
 20250329	15:10:18	7092faf7-fa70-4972-abfa-bbb5f6f9b571	GET	undefined	/
 20250329	15:10:18	37634ccf-97a0-44c2-9973-b145e689b87e	GET	undefined	/css/style.css
 20250329	15:10:18	0de5c1e2-7229-40e9-ba64-ce6870534542	GET	undefined	/favicon.ico
+20250329	15:51:09	3205a410-768f-4bb0-bd21-5385bdc430d0	GET	undefined	/auth/google
+20250329	15:52:08	63aa99db-4178-4b60-8a30-9c0ec7d00db5	GET	undefined	/auth/google/callback?code=4%2F0AQSTgQHxhyL9TPmt82elA0JcVVrjXasCMQe2VeQ0NbUvJNQYifbky6XEEwzOFzznC4FlSQ&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&authuser=0&prompt=none
+20250329	15:52:18	4fd4ac61-7036-4da5-bba4-8dd45f129e8d	GET	undefined	/
+20250329	15:52:18	c7156097-53b4-4878-9ca3-ebdabf51abd1	GET	undefined	/css/style.css
+20250329	15:52:18	15247a5d-a41c-46a5-b28d-3a0ad0227e48	GET	undefined	/favicon.ico
