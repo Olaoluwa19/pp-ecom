@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Order = require("../../model/apiModel/Order");
 const OrderItem = require("../../model/apiModel/OrderItem");
 const Address = require("../../model/Address");
-const { findOrderById, deleteOrder } = require("../../services/orderUtils");
+const { findOrderById, deleteOrderById } = require("../../services/orderUtils");
 const {
   findOrderItemById,
   findAndPopulateOrderItemProductPrice,
@@ -135,6 +135,15 @@ const updateOrderStatus = async (req, res) => {
       `The ID: ${req.body.id} provided is not a valid ID.`
     );
 
+  // validate order status
+  if (
+    !["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"].includes(
+      req.body.status
+    )
+  ) {
+    return responseMessage(res, 400, false, "Invalid order status input");
+  }
+
   const order = await Order.findOne({ _id: req.body.id }).exec();
   if (!order) {
     return responseMessage(
@@ -153,7 +162,7 @@ const updateOrderStatus = async (req, res) => {
 
 const deleteOrder = async (req, res) => {
   // check if an order ID is being provided
-  const orderId = req.params.id || req.body.id;
+  const orderId = req.body.id;
   if (!orderId) {
     return responseMessage(res, 400, false, "Order ID is required");
   }
@@ -181,7 +190,7 @@ const deleteOrder = async (req, res) => {
     }
 
     // Delete the order
-    await deleteOrder(orderId);
+    await deleteOrderById(orderId);
     return responseMessage(
       res,
       200,
