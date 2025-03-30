@@ -1,6 +1,12 @@
 const mongoose = require("mongoose");
 const Order = require("../../model/apiModel/Order");
 const OrderItem = require("../../model/apiModel/OrderItem");
+const Address = require("../../model/Address");
+const {
+  findAddressById,
+  createAddress,
+} = require("../../services/addressUtils");
+const { responseMessage } = require("../../services/utils");
 
 const getAllOrders = async (req, res) => {
   const orderList = await Order.find()
@@ -13,50 +19,47 @@ const getAllOrders = async (req, res) => {
 };
 
 const createNewOrder = async (req, res) => {
+  const { orderItems, shippingAddress1, shippingAddress2, phone, user } =
+    req.body;
+
+  // Validate required fields
+  if (!orderItems?.length || !shippingAddress1 || !phone) {
+    return responseMessage(res, 400, false, "Required fields are missing");
+  }
+
   try {
-    const { orderItems, shippingAddress1, city, zip, country, phone } =
-      req.body;
-    if (
-      !orderItems ||
-      !shippingAddress1 ||
-      !city ||
-      !zip ||
-      !country ||
-      !phone
-    ) {
-      return res.status(400).json({ message: "Required fields are missing" });
+    // Create OrderItems and calculate total price in one go
+    const orderItemIds = [];
+    let totalPrice = 0;
+
+    for (const item of orderItems) {
+      const newOrderItem = await OrderItem.create({
+        quantity: item.quantity,
+        product: item.product,
+      });
+
+      const populatedItem = await OrderItem.findById(newOrderItem._id)
+        .populate("product", "price")
+        .lean(); // Use lean() for performance since we only need data
+
+      totalPrice += populatedItem.product.price * item.quantity;
+      orderItemIds.push(newOrderItem._id);
     }
 
-    const orderItemsWithTotalPrice = await Promise.all(
-      orderItems.map(async (orderItem) => {
-        const newOrderItem = await OrderItem.create({
-          quantity: orderItem.quantity,
-          product: orderItem.product,
-        });
-        const productPrice = await OrderItem.findById(
-          newOrderItem._id
-        ).populate("product", "price");
-        return {
-          id: newOrderItem._id,
-          totalPrice: productPrice.product.price * orderItem.quantity,
-        };
-      })
-    );
+    // Handle shipping addresses
+    const addressDoc1 = await createAddress({ body: { ...shippingAddress1 } });
+    const addressDoc2 = shippingAddress2
+      ? await createAddress({ body: { ...shippingAddress2 } })
+      : null;
 
-    const totalPrice = orderItemsWithTotalPrice.reduce(
-      (acc, cur) => acc + cur.totalPrice,
-      0
-    );
-
+    // Create the order
     const order = await Order.create({
-      orderItems: orderItemsWithTotalPrice.map((item) => item.id),
-      shippingAddress1,
-      city,
-      zip,
-      country,
+      orderItems: orderItemIds,
+      shippingAddress1: addressDoc1._id,
+      shippingAddress2: addressDoc2?._id || null,
       phone,
       totalPrice,
-      user: req.body.user,
+      user,
     });
 
     res.status(201).json(order);

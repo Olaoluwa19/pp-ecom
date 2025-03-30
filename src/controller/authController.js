@@ -1,27 +1,28 @@
 const User = require("../model/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { responseMessage } = require("../services/utils");
+const { findUserByEmailOrPhone } = require("../services/userUtils");
 
 const handleLogin = async (req, res) => {
   const { user, email, phone, password } = req.body;
   // Use user, email, or phone (whichever is provided)
   const loginIdentifier = user || email || phone;
   if (!loginIdentifier)
-    return res
-      .status(400)
-      .json({ message: "enter a valid email or mobile to login." });
+    return responseMessage(
+      res,
+      400,
+      false,
+      "enter a valid email or mobile to login."
+    );
 
   if (!password)
-    return res.status(400).json({ message: "enter your password to login." });
+    return responseMessage(res, 400, false, "enter your password to login.");
 
-  const foundUser = await User.findOne({
-    $or: [{ phone: loginIdentifier }, { email: loginIdentifier }],
-  }).exec();
+  const foundUser = findUserByEmailOrPhone(loginIdentifier);
 
   if (!foundUser)
-    return res.status(401).json({
-      message: "Incorrect phone number or email",
-    }); // Unauthorised
+    return responseMessage(res, 400, false, "Incorrect phone number or email"); // Unauthorised
 
   // Evaluate password
   const match = await bcrypt.compare(password, foundUser.password);
@@ -56,9 +57,7 @@ const handleLogin = async (req, res) => {
     // secure: true
     res.json({ accessToken });
   } else {
-    return res.status(401).json({
-      message: "Incorrect password",
-    });
+    return responseMessage(res, 401, false, "Incorrect password");
   }
 };
 
