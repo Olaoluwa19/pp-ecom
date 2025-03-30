@@ -3,7 +3,7 @@ const router = express.Router();
 const {
   getAllOrders,
   createNewOrder,
-  updateOrder,
+  updateOrderStatus,
   deleteOrder,
   getOrdersCount,
   getTotalSales,
@@ -17,7 +17,7 @@ router
   .route("/")
   .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getAllOrders)
   .post(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.User), createNewOrder)
-  .put(verifyRoles(ROLES_LIST.Admin), updateOrder)
+  .put(verifyRoles(ROLES_LIST.Admin), updateOrderStatus)
   .delete(verifyRoles(ROLES_LIST.User), deleteOrder);
 
 router

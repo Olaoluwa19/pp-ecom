@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Order = require("../../model/apiModel/Order");
 const OrderItem = require("../../model/apiModel/OrderItem");
 const Address = require("../../model/Address");
+const { findOrderById, deleteOrder } = require("../../services/orderUtils");
 const {
   findOrderItemById,
   findAndPopulateOrderItemProductPrice,
@@ -82,49 +83,66 @@ const getOrder = async (req, res) => {
       false,
       `No Order ID matches ${req.params.id}.`
     );
-  const order = await Order.findOne({ _id: req.params.id })
-    .populate([
-      {
-        path: "user",
-        select: "username",
-      },
-      {
-        path: "orderItems",
-        populate: {
-          path: "product",
-          select: "name category",
-          populate: { path: "category", select: "name" },
-        },
-      },
-      {
-        path: "shippingAddress1",
-        select: "street city country",
-      },
-      {
-        path: "shippingAddress2",
-        select: "street city country",
-      },
-    ])
-    .exec();
 
-  res.json(order);
+  try {
+    const order = await Order.findOne({ _id: req.params.id })
+      .populate([
+        {
+          path: "user",
+          select: "username",
+        },
+        {
+          path: "orderItems",
+          populate: {
+            path: "product",
+            select: "name",
+            populate: { path: "category", select: "name" },
+          },
+        },
+        {
+          path: "shippingAddress1",
+          select: "street city country",
+        },
+        {
+          path: "shippingAddress2",
+          select: "street city country",
+        },
+      ])
+      .exec();
+
+    res.json(order);
+  } catch (error) {
+    console.error(error);
+    return responseMessage(
+      res,
+      500,
+      false,
+      `Error fetching order: ${error.message}`
+    );
+  }
 };
 
-const updateOrder = async (req, res) => {
+const updateOrderStatus = async (req, res) => {
   if (!req?.body?.id) {
-    return res.status(400).json({ message: "ID parameter is required" });
+    return responseMessage(res, 400, false, "ID parameter is required");
   }
 
-  if (!mongoose.isValidObjectId(req.body.id))
-    return res
-      .status(400)
-      .json({ message: `No order ID matches ${req.body.id}.` });
+  if (!validMongooseId(req.body.id))
+    return responseMessage(
+      res,
+      400,
+      false,
+      `The ID: ${req.body.id} provided is not a valid ID.`
+    );
 
   const order = await Order.findOne({ _id: req.body.id }).exec();
   if (!order) {
-    return res
-      .status(400)
-      .json({ message: `No order matches the ID ${req.body.id}.` });
+    return responseMessage(
+      res,
+      400,
+      false,
+      `No order matches the ID ${req.body.id}.`
+    );
   }
 
   if (req?.body?.status) order.status = req.body.status;
@@ -134,24 +152,45 @@ const updateOrder = async (req, res) => {
 };
 
 const deleteOrder = async (req, res) => {
-  if (!req?.body?.id)
-    return res.status(400).json({ message: "Order ID required." });
+  // check if an order ID is being provided
+  const orderId = req.params.id || req.body.id;
+  if (!orderId) {
+    return responseMessage(res, 400, false, "Order ID is required");
+  }
+
+  if (!validMongooseId(orderId))
+    return responseMessage(res, 400, false, "enter a valid order ID");
 
   try {
-    const order = await Order.findOne({ _id: req.body.id });
-    if (order) {
-      await OrderItem.deleteMany({ order: order._id }).exec();
-
-      const result = await order.deleteOne({ _id: req.body.id });
-      res.json(result);
-    } else {
-      return res
-        .status(204)
-        .json({ message: `No order ID matches ${req.body.id}.` });
+    //  check if order exists
+    const order = await findOrderById(orderId);
+    if (!order) {
+      return responseMessage(
+        res,
+        404,
+        false,
+        `No order found with ID: ${orderId}`
+      );
     }
+
+    // delete orderItems
+    if (order.orderItems.length > 0) {
+      await OrderItem.deleteMany({
+        _id: { $in: order.orderItems },
+      });
+    }
+
+    // Delete the order
+    await deleteOrder(orderId);
+    return responseMessage(
+      res,
+      200,
+      true,
+      `Order ${orderId} deleted successfully`
+    );
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error deleting Order" });
+    console.error("Delete order error:", error);
+    return responseMessage(res, 500, false, `Server error: ${error.message}`);
   }
 };
 
@@ -200,7 +239,7 @@ module.exports = {
   getAllOrders,
   createNewOrder,
   getOrder,
-  updateOrder,
+  updateOrderStatus,
   deleteOrder,
   getTotalSales,
   getOrdersCount,
