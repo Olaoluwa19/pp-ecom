@@ -3,15 +3,20 @@ const Order = require("../../model/apiModel/Order");
 const OrderItem = require("../../model/apiModel/OrderItem");
 const Address = require("../../model/Address");
 const {
+  findOrderItemById,
+  findAndPopulateOrderItemProductPrice,
+  creatOrderItem,
+} = require("../../services/orderItemUtils");
+const {
   findAddressById,
   createAddress,
 } = require("../../services/addressUtils");
-const { responseMessage } = require("../../services/utils");
+const { validMongooseId, responseMessage } = require("../../services/utils");
 
 const getAllOrders = async (req, res) => {
   const orderList = await Order.find()
     .populate("user", "username")
-    .sort({ dateOrdered: -1 });
+    .sort({ createdAt: -1 });
   if (!orderList) {
     return res.status(204).json({ message: "No Orders Found." });
   }
@@ -33,14 +38,11 @@ const createNewOrder = async (req, res) => {
     let totalPrice = 0;
 
     for (const item of orderItems) {
-      const newOrderItem = await OrderItem.create({
-        quantity: item.quantity,
-        product: item.product,
-      });
+      const newOrderItem = await creatOrderItem({ body: { ...item } });
 
-      const populatedItem = await OrderItem.findById(newOrderItem._id)
-        .populate("product", "price")
-        .lean(); // Use lean() for performance since we only need data
+      const populatedItem = await findAndPopulateOrderItemProductPrice(
+        newOrderItem._id
+      ); // Use lean() for performance since we only need data
 
       totalPrice += populatedItem.product.price * item.quantity;
       orderItemIds.push(newOrderItem._id);
@@ -65,25 +67,44 @@ const createNewOrder = async (req, res) => {
     res.status(201).json(order);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error creating order" });
+    responseMessage(res, 500, false, "Error creating order", error);
   }
 };
 
 const getOrder = async (req, res) => {
   if (!req?.params?.id)
-    return res.status(400).json({ message: "Order ID is required." });
+    return responseMessage(res, 400, false, "Order ID is required.");
 
-  if (!mongoose.isValidObjectId(req.params.id))
-    return res
-      .status(400)
-      .json({ message: `No Order ID matches ${req.params.id}.` });
-
+  if (!validMongooseId(req.params.id))
+    return responseMessage(
+      res,
+      400,
+      false,
+      `No Order ID matches ${req.params.id}.`
+    );
   const order = await Order.findOne({ _id: req.params.id })
-    .populate("user", "username")
-    .populate({
-      path: "orderItems",
-      populate: { path: "product", populate: "category" },
-    })
+    .populate([
+      {
+        path: "user",
+        select: "username",
+      },
+      {
+        path: "orderItems",
+        populate: {
+          path: "product",
+          select: "name category",
+          populate: { path: "category", select: "name" },
+        },
+      },
+      {
+        path: "shippingAddress1",
+        select: "street city country",
+      },
+      {
+        path: "shippingAddress2",
+        select: "street city country",
+      },
+    ])
     .exec();
 
   res.json(order);

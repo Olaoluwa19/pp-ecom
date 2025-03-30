@@ -5,9 +5,7 @@ const findOrderItemById = async (id) => {
 };
 
 const findAndPopulateOrderItemProductPrice = async (id) => {
-  return await OrderItem.findById(newOrderItem._id)
-    .populate("product", "price")
-    .lean();
+  return await OrderItem.findById(id).populate("product", "price").lean();
 };
 
 const creatOrderItem = async (req) => {

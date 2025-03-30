@@ -6,6 +6,7 @@ const { findUserByEmailOrPhone } = require("../services/userUtils");
 
 const handleLogin = async (req, res) => {
   const { user, email, phone, password } = req.body;
+
   // Use user, email, or phone (whichever is provided)
   const loginIdentifier = user || email || phone;
   if (!loginIdentifier)
@@ -19,7 +20,7 @@ const handleLogin = async (req, res) => {
   if (!password)
     return responseMessage(res, 400, false, "enter your password to login.");
 
-  const foundUser = findUserByEmailOrPhone(loginIdentifier);
+  const foundUser = await findUserByEmailOrPhone(loginIdentifier);
 
   if (!foundUser)
     return responseMessage(res, 400, false, "Incorrect phone number or email"); // Unauthorised

@@ -35,10 +35,6 @@ const orderSchema = Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
     },
-    dateOrdered: {
-      type: Date,
-      default: Date.now,
-    },
   },
   { timestamps: true }
 );
