@@ -5,8 +5,8 @@ const {
   createNewOrder,
   updateOrderStatus,
   deleteOrder,
-  getOrdersCount,
-  getTotalSales,
+  getOrdersCountByStatus,
+  getSalesByStatus,
   getUserOrders,
   getOrder,
 } = require("../../controller/APIController/ordersController");
@@ -18,14 +18,17 @@ router
   .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getAllOrders)
   .post(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.User), createNewOrder)
   .put(verifyRoles(ROLES_LIST.Admin), updateOrderStatus)
-  .delete(verifyRoles(ROLES_LIST.User, ROLES_LIST.Admin), deleteOrder);
+  .delete(verifyRoles(ROLES_LIST.User), deleteOrder);
 
 router
-  .route("/count")
-  .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getOrdersCount);
+  .route("/count-by-status")
+  .get(
+    verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin),
+    getOrdersCountByStatus
+  );
 router
-  .route("/totalSales")
-  .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getTotalSales);
+  .route("/sales-by-status")
+  .post(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getSalesByStatus);
 router
   .route("/userOrders/:userid")
   .get(verifyRoles(ROLES_LIST.User), getUserOrders);

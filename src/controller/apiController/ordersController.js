@@ -203,28 +203,109 @@ const deleteOrder = async (req, res) => {
   }
 };
 
-const getTotalSales = async (req, res) => {
-  const totalSales = await Order.aggregate([
-    { $group: { _id: null, totalSales: { $sum: "$totalPrice" } } },
+const getSalesByStatus = async (req, res) => {
+  // Extract status from request body
+  const { status } = req.body;
+
+  // Validate status against enum values
+  const validStatuses = [
+    "Pending",
+    "Confirmed",
+    "Shipped",
+    "Delivered",
+    "Cancelled",
+  ];
+  if (!status || !validStatuses.includes(status)) {
+    return responseMessage(
+      res,
+      400,
+      false,
+      "Invalid or missing status. Must be one of: " + validStatuses.join(", ")
+    );
+  }
+
+  // Perform aggregation to sum totalPrice for the specified status
+  const salesByStatus = await Order.aggregate([
+    // Filter for orders with the specified status
+    {
+      $match: {
+        status: status,
+      },
+    },
+    // Group and sum the totalPrice
+    {
+      $group: {
+        _id: null,
+        totalSales: {
+          $sum: "$totalPrice",
+        },
+      },
+    },
   ]);
 
-  if (!totalSales) {
-    return res.Status(400).send("The order sales cannot be generated");
+  // Check if there are any results
+  if (salesByStatus.length === 0) {
+    return responseMessage(
+      res,
+      200, // Using 200 since no results is a valid outcome
+      true,
+      `No ${status} orders found`,
+      { totalSales: 0 }
+    );
   }
-  const result = totalSales.pop().totalSales;
-  res.send({ totalSales: result });
+
+  // Extract totalSales value from the aggregation result
+  const result = salesByStatus[0].totalSales;
+  return responseMessage(res, 200, true, `Total sales for ${status} orders`, {
+    totalSales: result,
+  });
 };
 
-const getOrdersCount = async (req, res) => {
+const getOrdersCountByStatus = async (req, res) => {
   try {
-    const count = await Order.countDocuments();
-    if (count === 0) {
-      return res.status(404).json({ error: "No orders found" });
+    // Extract status from request body
+    const { status } = req.body;
+
+    // Define valid statuses from the schema's enum
+    const validStatuses = [
+      "Pending",
+      "Confirmed",
+      "Shipped",
+      "Delivered",
+      "Cancelled",
+    ];
+
+    // If no status provided, count all orders (original behavior)
+    let query = {};
+    if (status) {
+      // Validate status if provided
+      if (!validStatuses.includes(status)) {
+        return responseMessage(
+          res,
+          400,
+          false,
+          "Invalid status. Must be one of: " + validStatuses.join(", ")
+        );
+      }
+      query = { status }; // Filter by status if valid
     }
-    res.json({ count });
+
+    // Count documents based on query
+    const count = await Order.countDocuments(query);
+
+    // Return appropriate response
+    if (count === 0) {
+      const message = status ? `No ${status} orders found` : "No orders found";
+      return responseMessage(res, 200, true, message, { count: 0 });
+    }
+
+    const message = status
+      ? `Found ${count} ${status} orders`
+      : `Found ${count} total orders`;
+    return responseMessage(res, 200, true, message, { count });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Internal Server Error" });
+    return responseMessage(res, 500, false, "Internal Server Error");
   }
 };
 
@@ -236,7 +317,7 @@ const getUserOrders = async (req, res) => {
       path: "orderItems",
       populate: { path: "product", populate: "category" },
     })
-    .sort({ dateOrdered: -1 })
+    .sort({ createdAt: -1 })
     .exec();
   if (!userOrders) {
     return res.status(204).json({ message: "No Orders Found." });
@@ -250,8 +331,8 @@ module.exports = {
   getOrder,
   updateOrderStatus,
   deleteOrder,
-  getTotalSales,
-  getOrdersCount,
+  getSalesByStatus,
+  getOrdersCountByStatus,
   getUserOrders,
 };
 
