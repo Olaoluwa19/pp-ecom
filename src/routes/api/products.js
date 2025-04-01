@@ -18,47 +18,47 @@ const verifyRoles = require("../../middleware/verifyRoles");
 
 router
   .route("/")
-  .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getAllProduct)
+  .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getAllProduct)
   .post(
-    verifyRoles(ROLES_LIST.Admin),
+    verifyRoles(ROLES_LIST.Seller),
     uploadOptions.single("image"),
     createNewProduct
   )
   .put(
-    verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin),
+    verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller),
     uploadOptions.single("image"),
     updateProduct
   )
-  .delete(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), deleteProduct);
+  .delete(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), deleteProduct);
 
 router
   .route("/count")
-  .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getProductCount);
+  .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getProductCount);
 router
   .route("/featured/:count")
-  .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getFeaturedProduct);
+  .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getFeaturedProduct);
 router
   .route("/category/:category")
-  .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getProductCategory);
+  .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getProductCategory);
 router
   .route("/userproducts/:userid")
-  .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getUserProducts);
+  .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getUserProducts);
 // router
 //   .route("/update/:userid?")
 //   .put(
-//     verifyRoles(ROLES_LIST.Admin),
+//     verifyRoles(ROLES_LIST.Seller),
 //     uploadOptions.single("image"),
 //     updateProduct
 //   );
 router
   .route("/gallery-images/:id")
   .put(
-    verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin),
+    verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller),
     uploadOptions.array("images", 10),
     handleGalleryImages
   );
 router
   .route("/:id")
-  .get(verifyRoles(ROLES_LIST.Editor, ROLES_LIST.Admin), getProduct);
+  .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getProduct);
 
 module.exports = router;

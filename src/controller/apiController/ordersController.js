@@ -296,13 +296,13 @@ const getOrdersCountByStatus = async (req, res) => {
     // Return appropriate response
     if (count === 0) {
       const message = status ? `No ${status} orders found` : "No orders found";
-      return responseMessage(res, 200, true, message, { count: 0 });
+      return responseMessage(res, 200, true, `message\t{ ${count} }`);
     }
 
     const message = status
       ? `Found ${count} ${status} orders`
       : `Found ${count} total orders`;
-    return responseMessage(res, 200, true, message, { count });
+    return responseMessage(res, 200, true, `message\t{ ${count} }`);
   } catch (err) {
     console.error(err);
     return responseMessage(res, 500, false, "Internal Server Error");

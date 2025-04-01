@@ -13,9 +13,9 @@ const verifyRoles = require("../../middleware/verifyRoles");
 router
   .route("/")
   .get(getAllCategories)
-  .post(verifyRoles(ROLES_LIST.Editor), createNewCategory)
-  .put(verifyRoles(ROLES_LIST.Editor), updateCategory)
-  .delete(verifyRoles(ROLES_LIST.Editor), deleteCategory);
+  .post(verifyRoles(ROLES_LIST.Admin), createNewCategory)
+  .put(verifyRoles(ROLES_LIST.Admin), updateCategory)
+  .delete(verifyRoles(ROLES_LIST.Admin), deleteCategory);
 
 router.route("/:id").get(getCategory);
 
