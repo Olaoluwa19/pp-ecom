@@ -1,4 +1,3 @@
-const User = require("../model/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { responseMessage } = require("../services/utils");
@@ -33,7 +32,7 @@ const handleLogin = async (req, res) => {
     const accessToken = jwt.sign(
       {
         UserInfo: {
-          username: foundUser.email || foundUser.phone,
+          user: foundUser.email || foundUser.phone,
           roles: roles,
         },
       },
@@ -41,7 +40,7 @@ const handleLogin = async (req, res) => {
       { expiresIn: "15m" }
     );
     const refreshToken = jwt.sign(
-      { username: foundUser.email || foundUser.phone },
+      { user: foundUser.email || foundUser.phone },
       process.env.REFRESH_TOKEN_SECRET,
       { expiresIn: "1d" }
     );

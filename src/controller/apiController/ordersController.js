@@ -204,10 +204,10 @@ const deleteOrder = async (req, res) => {
 };
 
 const getSalesByStatus = async (req, res) => {
-  // Extract status from request body
+  // extract status from request body
   const { status } = req.body;
 
-  // Validate status against enum values
+  // validate status
   const validStatuses = [
     "Pending",
     "Confirmed",
@@ -215,22 +215,27 @@ const getSalesByStatus = async (req, res) => {
     "Delivered",
     "Cancelled",
   ];
-  if (!status || !validStatuses.includes(status)) {
-    return responseMessage(
-      res,
-      400,
-      false,
-      "Invalid or missing status. Must be one of: " + validStatuses.join(", ")
-    );
+
+  // If no status provided, aggregate all orders
+  let query = {};
+  if (status) {
+    // Validate status if provided
+    if (!validStatuses.includes(status)) {
+      return responseMessage(
+        res,
+        400,
+        false,
+        "Invalid or missing status. Must be one of: " + validStatuses.join(", ")
+      );
+    }
+    query = { status }; // filter by status if valid
   }
 
-  // Perform aggregation to sum totalPrice for the specified status
+  // Perform aggregation to sum totalPrice
   const salesByStatus = await Order.aggregate([
-    // Filter for orders with the specified status
+    // Filter for orders with the specified status (if provided)
     {
-      $match: {
-        status: status,
-      },
+      $match: query, // Empty object matches all documents when no status is given
     },
     // Group and sum the totalPrice
     {
@@ -247,26 +252,32 @@ const getSalesByStatus = async (req, res) => {
   if (salesByStatus.length === 0) {
     return responseMessage(
       res,
-      200, // Using 200 since no results is a valid outcome
+      200,
       true,
-      `No ${status} orders found`,
-      { totalSales: 0 }
+      status
+        ? `No ${status} orders found { totalSales: 0 }`
+        : "No orders found { totalSales: 0 }"
     );
   }
 
   // Extract totalSales value from the aggregation result
   const result = salesByStatus[0].totalSales;
-  return responseMessage(res, 200, true, `Total sales for ${status} orders`, {
-    totalSales: result,
-  });
+  return responseMessage(
+    res,
+    200,
+    true,
+    status
+      ? `Total sales for ${status} orders { totalSales: ${result} }`
+      : `Total sales for all orders { totalSales: ${result} }`
+  );
 };
 
 const getOrdersCountByStatus = async (req, res) => {
   try {
-    // Extract status from request body
+    // extract status from request body
     const { status } = req.body;
 
-    // Define valid statuses from the schema's enum
+    // validate order statuse
     const validStatuses = [
       "Pending",
       "Confirmed",
@@ -275,7 +286,7 @@ const getOrdersCountByStatus = async (req, res) => {
       "Cancelled",
     ];
 
-    // If no status provided, count all orders (original behavior)
+    // If no status provided, count all orders
     let query = {};
     if (status) {
       // Validate status if provided
@@ -296,13 +307,13 @@ const getOrdersCountByStatus = async (req, res) => {
     // Return appropriate response
     if (count === 0) {
       const message = status ? `No ${status} orders found` : "No orders found";
-      return responseMessage(res, 200, true, `message\t{ ${count} }`);
+      return responseMessage(res, 200, true, `${message}: {count: ${count} }`);
     }
 
     const message = status
       ? `Found ${count} ${status} orders`
       : `Found ${count} total orders`;
-    return responseMessage(res, 200, true, `message\t{ ${count} }`);
+    return responseMessage(res, 200, true, `${message}: {count: ${count} }`);
   } catch (err) {
     console.error(err);
     return responseMessage(res, 500, false, "Internal Server Error");

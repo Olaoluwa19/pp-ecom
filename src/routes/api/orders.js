@@ -29,9 +29,7 @@ router
 router
   .route("/sales-by-status")
   .post(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getSalesByStatus);
-router
-  .route("/userOrders/:userid")
-  .get(verifyRoles(ROLES_LIST.User), getUserOrders);
+router.route("/user-orders/:userid").get(getUserOrders);
 router.route("/:id").get(getOrder);
 
 module.exports = router;

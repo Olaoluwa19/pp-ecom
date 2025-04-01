@@ -1,10 +1,13 @@
 const User = require("../model/User");
+const { responseMessage } = require("../services/utils");
 
 const handleLogout = async (req, res) => {
   // On client, also delete the accessToken
 
+  //
   const cookies = req.cookies;
-  if (!cookies?.jwt) return res.sendStatus(204); // No content
+  if (!cookies?.jwt)
+    return responseMessage(res, 200, false, "No JWT cookies found"); // No content
   const refreshToken = cookies.jwt;
 
   // is refreshToken in db
@@ -15,10 +18,10 @@ const handleLogout = async (req, res) => {
       sameSite: "None",
       secure: true,
     });
-    return res.sendStatus(204);
+    return responseMessage(res, 200, false, "No cookies found in DB.");
   }
 
-  // Delete refreshToken in db
+  // delete refreshToken in db
   foundUser.refreshToken = "";
   const result = await foundUser.save();
   console.log(result);
@@ -28,7 +31,12 @@ const handleLogout = async (req, res) => {
     sameSite: "None",
     secure: true,
   }); // secure: true - only serves on http
-  res.sendStatus(204);
+  responseMessage(
+    res,
+    200,
+    true,
+    "Successfully cleared refreshtoken. Logout successfully."
+  );
 };
 
 const handleGoogleLogout = (req, res) => {

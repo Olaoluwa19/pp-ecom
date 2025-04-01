@@ -32,3 +32,5 @@
 20240530	04:17:08	cc81fbfa-e236-4080-8042-8db4dc457c38	MulterError : Unexpected field
 20250322	15:41:18	dd331afb-9cf7-48ab-8d69-810da38a65fc	SyntaxError : Unexpected number in JSON at position 119
 20250323	16:43:51	89d404d3-09b8-444f-af5f-2c8f8176dd85	SyntaxError : Expected ',' or '}' after property value in JSON at position 45
+20250401	03:44:20	f1c82d9f-96d4-45ef-9fb6-c387f789c337	SyntaxError : Unexpected token 't', "tUser{
+  "... is not valid JSON
