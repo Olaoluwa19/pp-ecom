@@ -19,7 +19,7 @@ const getAllOrders = async (req, res) => {
     .populate("user", "username")
     .sort({ createdAt: -1 });
   if (!orderList) {
-    return res.status(204).json({ message: "No Orders Found." });
+    return responseMessage(res, 204, false, "No Orders Found.");
   }
   res.json(orderList);
 };
@@ -346,5 +346,3 @@ module.exports = {
   getOrdersCountByStatus,
   getUserOrders,
 };
-
-// 29 : 10

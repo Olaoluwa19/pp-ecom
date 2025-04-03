@@ -6,7 +6,7 @@ const {
   deleteCategoryField,
   updateAndSaveCategoryFields,
 } = require("../../services/categoryUtils");
-const { responseMessage } = require("../../services/utils");
+const { responseMessage, validMongooseId } = require("../../services/utils");
 
 const getAllCategories = async (req, res) => {
   // find all categories
@@ -46,7 +46,7 @@ const updateCategory = async (req, res) => {
   }
 
   //check if ID is valid.
-  if (!mongoose.isValidObjectId(id))
+  if (!validMongooseId(id))
     return responseMessage(res, 400, false, `No Category ID matches ${id}.`);
 
   // check if category exists.
@@ -77,7 +77,7 @@ const deleteCategory = async (req, res) => {
   if (!id) return responseMessage(res, 400, false, "Category ID required.");
 
   // check if ID is valid.
-  if (!mongoose.isValidObjectId(id))
+  if (!validMongooseId(id))
     return responseMessage(res, 400, false, `No Category ID matches ${id}.`);
 
   // find category by ID.
@@ -102,7 +102,7 @@ const getCategory = async (req, res) => {
   if (!id) return responseMessage(res, 204, false, "Category ID required.");
 
   // check if ID is valid.
-  if (!mongoose.isValidObjectId(id))
+  if (!validMongooseId(id))
     return responseMessage(res, 400, false, `No Category ID matches ${id}.`);
 
   // find category by ID.

@@ -1,5 +1,9 @@
 const User = require("../model/User");
 
+const findUserById = async (userId) => {
+  return await User.findOne({ _id: userId }).exec();
+};
+
 const findUserByEmailOrPhone = async (identifier) => {
   return await User.findOne({
     $or: [{ phone: identifier }, { email: identifier }],
@@ -33,6 +37,7 @@ const getPopulatedUser = async (userId) => {
 };
 
 module.exports = {
+  findUserById,
   findUserByEmailOrPhone,
   checkDuplicateUser,
   createUser,

@@ -56,7 +56,7 @@ const createNewUser = async (req, res) => {
 
   try {
     // create address document
-    const addressDoc = await createAddress(address);
+    const addressDoc = await createAddress({ body: { ...address } });
 
     // encrypt the password
     const hashedPwd = await bcrypt.hash(password, 10);

@@ -1,17 +1,17 @@
 const mongoose = require("mongoose");
 const Product = require("../../model/apiModel/Product");
-// const uploadOptions = require("../../middleware/productImageHandler");
 const {
-  findProductbyId,
+  findProductById,
   findAllProductsAndPopulateCategory,
-  findUserById,
   createProductFields,
+  updateProductFields,
   populateProductCategoryField,
   updateProductImages,
 } = require("../../services/productUtils");
 
+const { findUserById } = require("../../services/userUtils");
+
 const { findCategoryById } = require("../../services/categoryUtils");
-const Category = require("../../model/apiModel/Category");
 const {
   validMongooseId,
   responseMessage,
@@ -70,7 +70,7 @@ const createNewProduct = async (req, res) => {
       "No Category matches the ID provided"
     );
 
-  const uploadedImage = await getImage(req);
+  const uploadedImage = await getImage({ body: { ...image } });
   try {
     const result = await createProductFields(req, uploadedImage);
 
@@ -83,125 +83,64 @@ const createNewProduct = async (req, res) => {
   }
 };
 
-const updateProduct1 = async (req, res) => {
-  const { id, category } = req.body;
-  if (!id)
-    return res.status(400).json({ message: "product id required is required" });
-
-  if (!mongoose.isValidObjectId(id))
-    return res.status(400).json({ message: `No product ID matches ${id}.` });
-
-  if (!mongoose.isValidObjectId(category))
-    return res
-      .status(400)
-      .json({ message: `No category ID matches ${category}.` });
-
-  const file = req.file;
-  const files = req.files;
-  let imagePaths = [];
-  const fileName = req.file.filename;
-  result;
-  const basePath = `${req.protocol}://${req.get("host")}/public/upload/`;
-  if (file) {
-    result = `${basePath}${fileName}`;
-  } else if (files) {
-    file.map((file) => {
-      imagePaths.push(`${basePath}${file.name}`);
-    });
-    result = imagePaths;
-  } else {
-    res.status(400).json({ message: "No file detected." });
-  }
-
-  try {
-    const product = await Product.findOne({ _id: req.body.id }).exec();
-    if (!product) {
-      return res
-        .status(400)
-        .json({ message: `No product matches the ID ${req.body.id}.` });
-    }
-
-    if (req?.body?.name) product.name = req.body.name;
-    if (req?.body?.image) product.image = result;
-    if (req?.body?.images) product.image = result;
-    if (req?.body?.description) product.description = req.body.description;
-    if (req?.body?.richDescription)
-      product.richDescription = req.body.richDescription;
-    if (req?.body?.brand) product.brand = req.body.brand;
-    if (req?.body?.price) product.price = req.body.price;
-    if (req?.body?.category) product.category = category;
-    if (req?.body?.countInStock) product.countInStock = req.body.countInStock;
-    if (req?.body?.rating) product.rating = req.body.rating;
-    if (req?.body?.numReviews) product.numReviews = req.body.numReviews;
-    if (req?.body?.isFeatured) product.isFeatured = req.body.isFeatured;
-
-    const result = await product.save();
-    res.json(result);
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: `Error in updating product` });
-  }
-};
-
 const updateProduct = async (req, res) => {
   const { id, category } = req.body;
-  if (!id)
-    return responseMessage(res, 400, false, "product id required is required");
+  if (!id) return responseMessage(res, 400, false, "product ID is required");
 
   if (!validMongooseId(id))
-    return responseMessage(res, 400, false, `No product ID matches ${id}.`);
+    return responseMessage(
+      res,
+      400,
+      false,
+      `Product ID: ${id} is not a valid ID.`
+    );
 
   if (!validMongooseId(category))
     return responseMessage(
       res,
       400,
       false,
-      `No category ID matches ${category}.`
+      `Category ID: ${category} is not a valid ID.`
     );
 
-  let file = req.file;
+  const product = await findProductById(id);
+  if (!product) {
+    return responseMessage(res, 400, false, `No product matches the ID ${id}.`);
+  }
+
+  const validCat = await findCategoryById(category);
+  if (!validCat) {
+    return responseMessage(
+      res,
+      400,
+      false,
+      `No category ID matches the ID: ${category}.`
+    );
+  }
+
+  let file = req.file || req.files;
   if (!file) return responseMessage(res, 400, false, "No file detected.");
 
-  const fileName = req.file.filename;
-  const basePath = `${req.protocol}://${req.get("host")}/public/upload/`;
-  const uploadedImage = `${basePath}${fileName}`;
-  // const files = req.files;
-  // if (file) {
-  //   files = [req.file];
-  // }
-  // let imagePaths = [];
-  // if (files) {
-  //   files.forEach((file) => {
-  //     imagePaths.push(`${basePath}${file.fileName}`);
-  //   });
-  //   imageGallery = imagePaths;
-  // }
+  const image = await getImage(req);
 
+  const uploadedImages = await getGalleryImages(req);
   try {
-    const product = await Product.findOne({ _id: id }).exec();
-    if (!product) {
-      return res
-        .status(400)
-        .json({ message: `No product matches the ID ${id}.` });
-    }
-    if (req?.body?.name) product.name = req.body.name;
-    if (req?.body?.image) product.image = uploadedImage;
-    // if (req?.body?.images) product.image = result;
-    if (req?.body?.description) product.description = req.body.description;
-    if (req?.body?.richDescription)
-      product.richDescription = req.body.richDescription;
-    if (req?.body?.brand) product.brand = req.body.brand;
-    if (req?.body?.price) product.price = req.body.price;
-    if (req?.body?.category) product.category = category;
-    if (req?.body?.countInStock) product.countInStock = req.body.countInStock;
-    if (req?.body?.rating) product.rating = req.body.rating;
-    if (req?.body?.numReviews) product.numReviews = req.body.numReviews;
-    if (req?.body?.isFeatured) product.isFeatured = req.body.isFeatured;
-    const result = await product.save();
+    const result = await updateProductFields(
+      req,
+      product,
+      image,
+      uploadedImages,
+      category
+    );
     res.json(result);
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: `Error in updating product` });
+    console.error(error);
+    return responseMessage(
+      res,
+      500,
+      false,
+      `Error in updating product ${error}`
+    );
   }
 };
 
@@ -298,30 +237,6 @@ const getProduct = async (req, res) => {
   res.json(product);
 };
 
-// const getUserProducts = async (req, res) => {
-//   // const product = await Product.findOne({ _id: req.params.id })
-
-//   try {
-//     if (!mongoose.isValidObjectId(req.params.userid))
-//       return res
-//         .status(400)
-//         .json({ message: `No user ID matches ${req.params.userid}.` });
-
-//     const userProducts = await Product.find({ user: req.params.userid })
-//       .populate("category")
-//       .sort({ createdAt: -1 })
-//       .exec();
-//     if (!userProducts) {
-//       return res.status(204).json({ message: "No Products Found." });
-//     }
-//     console.log(userProducts);
-//     res.json(userProducts);
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({ message: `${error.message}` });
-//   }
-// };
-
 const getUserProducts = async (req, res) => {
   try {
     const userid = req.params.userid;
@@ -343,7 +258,7 @@ const getUserProducts = async (req, res) => {
   }
 };
 
-const handleGalleryImages = async (req, res) => {
+const updateGalleryImages = async (req, res) => {
   // check if product ID is present
   if (!req?.params?.id)
     return responseMessage(res, 400, false, "Product ID is required.");
@@ -396,7 +311,7 @@ module.exports = {
   getProductCategory,
   getProduct,
   getUserProducts,
-  handleGalleryImages,
+  updateGalleryImages,
 };
 
 // 48 : 06

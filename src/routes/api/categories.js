@@ -20,3 +20,5 @@ router
 router.route("/:id").get(getCategory);
 
 module.exports = router;
+
+// 5 endpoints

@@ -10,7 +10,7 @@ const {
   getFeaturedProduct,
   getProductCategory,
   getUserProducts,
-  handleGalleryImages,
+  updateGalleryImages,
   getProduct,
 } = require("../../controller/APIController/productsController");
 const ROLES_LIST = require("../../config/roles_list");
@@ -18,7 +18,7 @@ const verifyRoles = require("../../middleware/verifyRoles");
 
 router
   .route("/")
-  .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getAllProduct)
+  .get(verifyRoles(ROLES_LIST.Admin), getAllProduct)
   .post(
     verifyRoles(ROLES_LIST.Seller),
     uploadOptions.single("image"),
@@ -26,7 +26,7 @@ router
   )
   .put(
     verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller),
-    uploadOptions.single("image"),
+    uploadOptions.array("images", 10),
     updateProduct
   )
   .delete(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), deleteProduct);
@@ -55,7 +55,7 @@ router
   .put(
     verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller),
     uploadOptions.array("images", 10),
-    handleGalleryImages
+    updateGalleryImages
   );
 router
   .route("/:id")

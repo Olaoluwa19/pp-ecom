@@ -15,20 +15,17 @@ const verifyRoles = require("../../middleware/verifyRoles");
 
 router
   .route("/")
-  .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getAllOrders)
-  .post(verifyRoles(ROLES_LIST.Seller, ROLES_LIST.User), createNewOrder)
-  .put(verifyRoles(ROLES_LIST.Seller), updateOrderStatus)
+  .get(verifyRoles(ROLES_LIST.Admin), getAllOrders)
+  .post(verifyRoles(ROLES_LIST.User), createNewOrder)
+  .put(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), updateOrderStatus)
   .delete(verifyRoles(ROLES_LIST.User), deleteOrder);
 
 router
   .route("/count-by-status")
-  .post(
-    verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller),
-    getOrdersCountByStatus
-  );
+  .post(verifyRoles(ROLES_LIST.Admin), getOrdersCountByStatus);
 router
   .route("/sales-by-status")
-  .post(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getSalesByStatus);
+  .post(verifyRoles(ROLES_LIST.Admin), getSalesByStatus);
 router.route("/user-orders/:userid").get(getUserOrders);
 router.route("/:id").get(getOrder);
 

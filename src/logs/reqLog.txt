@@ -1058,3 +1058,5 @@
 20250402	03:03:16	775b09a4-931c-4cf8-bc69-cd4104ef830a	GET	undefined	/refresh
 20250402	03:03:39	59344098-65f5-43d6-bf75-2dc00bf7b08c	GET	undefined	/refresh
 20250402	03:03:42	bb49c800-ed7a-4e75-a287-d0abc3564ceb	GET	undefined	/refresh
+20250403	01:05:55	295e230e-fba2-48c4-9ed5-825c1aef5472	POST	undefined	/register
+20250403	01:10:39	45e7b68c-3084-4033-ae42-7cf86ea3d09f	POST	undefined	/register
