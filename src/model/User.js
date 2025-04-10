@@ -16,7 +16,7 @@ const userSchema = new Schema(
       ],
       default: [2000],
     },
-    customerIsBanned: {
+    isSuspended: {
       type: Boolean,
       default: false,
     },

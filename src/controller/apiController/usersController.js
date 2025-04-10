@@ -1,86 +1,192 @@
 const mongoose = require("mongoose");
 const User = require("../../model/User");
-const bcrypt = require("bcryptjs");
+const {
+  findUserById,
+  encryptPassword,
+  updateUserFields,
+  deleteUserFields,
+} = require("../../services/userUtils");
+const { responseMessage, validMongooseId } = require("../../services/utils");
+const {
+  findAddressById,
+  createAddress,
+  updateAddress,
+} = require("../../services/addressUtils");
 
 const getAllUser = async (req, res) => {
-  const users = await User.find().select("-password");
-  if (!users) return res.status(204).json({ message: "No Users found." });
-  res.json(users);
+  try {
+    const users = await User.find().select("-password");
+    const count = await User.countDocuments();
+
+    return responseMessage(
+      res,
+      200,
+      true,
+      `{count: ${count}, users: ${users}}`
+    );
+  } catch (error) {
+    console.error(error);
+    return responseMessage(
+      res,
+      500,
+      false,
+      `Internal Server Error: ${error.message}`
+    );
+  }
 };
 
 const updateUser = async (req, res) => {
-  if (!req?.body?.id) {
-    return res.status(400).json({ message: "User ID is required." });
+  const { id, username, password, address } = req.body;
+  if (!id) {
+    return responseMessage(res, 400, false, "User ID is required.");
   }
 
-  if (req?.body?.username) {
-    return res
-      .status(403)
-      .json({ message: "You can not change your username." });
+  if (username) {
+    return responseMessage(
+      res,
+      403,
+      false,
+      "You can not change your username."
+    );
   }
 
-  if (!mongoose.isValidObjectId(req.body.id))
-    return res
-      .status(400)
-      .json({ message: `No user ID matches ${req.body.id}.` });
+  if (!validMongooseId(id))
+    return responseMessage(
+      res,
+      400,
+      false,
+      `Invalid Mongoose ID: ${id} provided`
+    );
 
+  const user = await findUserById(id);
+
+  const existingAddress = await findAddressById(user.address);
+
+  const hashedPwd = await encryptPassword(password);
   try {
-    const user = await User.findOne({ _id: req.body.id }).exec();
-    const hashedPwd = await bcrypt.hash(req.body.password, 10);
+    const addressDoc = existingAddress
+      ? await updateAddress({ body: { ...address } }, existingAddress)
+      : await createAddress({ body: { ...address } });
 
-    if (req?.body?.password) user.password = hashedPwd;
-    if (req?.body?.email) user.email = req.body.email;
-    if (req?.body?.phone) user.phone = req.body.phone;
-    if (req?.body?.street) user.street = req.body.street;
-    if (req?.body?.apartment) user.apartment = req.body.apartment;
-    if (req?.body?.zip) user.zip = req.body.zip;
-    if (req?.body?.city) user.city = req.body.city;
-    if (req?.body?.country) user.country = req.body.country;
-
-    const result = await user.save();
+    const result = await updateUserFields(req, user, hashedPwd, addressDoc._id);
     res.json(result);
   } catch (error) {
-    return res.json({ message: `${error.message}` });
+    console.error(error);
+    return responseMessage(
+      res,
+      500,
+      false,
+      `Internal Server error: ${error.message}`
+    );
   }
 };
 
 const deleteUser = async (req, res) => {
-  if (!req?.body?.id) {
-    return res.status(400).json({ message: "User ID required." });
+  const { id } = req.body;
+  if (!id) {
+    return responseMessage(res, 400, false, "User ID is required.");
   }
-  if (!mongoose.isValidObjectId(req.body.id))
-    return res
-      .status(400)
-      .json({ message: `No user ID matches ${req.body.id}.` });
 
-  const user = await User.findOne({ _id: req.body.id }).exec();
-  const result = await user.deleteOne({ _id: req.body.id });
+  if (!validMongooseId(id))
+    return responseMessage(res, 400, false, `Invalid ID: ${id} provided.`);
 
-  res.json(result);
+  const user = await findUserById(id);
+  if (!user) responseMessage(res, 400, false, "User not found.");
+
+  try {
+    const result = await deleteUserFields(user._id);
+
+    res.json(result);
+  } catch (error) {
+    console.error(error.message);
+    return responseMessage(res, 500, false, "Internal Server error");
+  }
 };
 
 const getUser = async (req, res) => {
-  if (!req?.params?.id)
-    return res.status(400).json({ message: "User ID is required." });
+  const { id } = req.params;
+  if (!id) return responseMessage(res, 400, false, "User ID is required.");
 
-  if (!mongoose.isValidObjectId(req.params.id))
-    return res
-      .status(400)
-      .json({ message: `No user ID matches ${req.params.id}.` });
+  if (!validMongooseId(id))
+    return responseMessage(res, 400, false, `Invalid ID: ${id} provided.`);
 
-  const user = await User.findOne({ _id: req.params.id })
-    .select("-password")
-    .exec();
+  const user = await User.findOne({ _id: id }).select("-password").exec();
 
   res.json(user);
 };
 
-const filterUsers = async (req, res) => {};
+const countUserRoles = async (req, res) => {
+  const { role } = req.params;
+  if (!role) return responseMessage(res, 400, false, "Role is required.");
+
+  if (![2000, 1995, 5919].includes(role))
+    return responseMessage(
+      res,
+      400,
+      false,
+      `Invalid role: ${role}. Valid roles are 2000, 1995, 5919.`
+    );
+
+  try {
+    const count = await User.countDocuments({ roles: role });
+    const user = await User.find({ roles: role }).exec();
+    console.log(user);
+
+    return responseMessage(
+      res,
+      200,
+      true,
+      `There are {${count}} users with the role ${role}. ${user}`
+    );
+  } catch (err) {
+    console.error(err);
+    return responseMessage(
+      res,
+      500,
+      false,
+      `Error fetching user count: ${err.message}`
+    );
+  }
+};
+
+const getUserCount = async (req, res) => {
+  try {
+    const count = await User.countDocuments();
+    return responseMessage(
+      res,
+      200,
+      true,
+      `There are ${count} users in the database.`
+    );
+  } catch (err) {
+    console.error(err);
+    return responseMessage(
+      res,
+      500,
+      false,
+      `Error fetching user count: ${err.message}`
+    );
+  }
+};
+
+const suspendUser = async () => {
+  const { id, isSuspended } = req.body;
+  const user = await User.findOne({ _id: id }).exec();
+  if (isSuspended) user.isSuspended = isSuspended;
+
+  await user.save();
+  const result = isSuspended
+    ? responseMessage(`User: ${user} has being suspended`)
+    : responseMessage(`User: ${user} has being Unsuspended`);
+  return result;
+};
 
 module.exports = {
   getAllUser,
   updateUser,
   deleteUser,
   getUser,
-  filterUsers,
+  countUserRoles,
+  getUserCount,
+  suspendUser,
 };

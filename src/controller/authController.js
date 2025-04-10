@@ -24,6 +24,14 @@ const handleLogin = async (req, res) => {
   if (!foundUser)
     return responseMessage(res, 400, false, "Incorrect phone number or email"); // Unauthorised
 
+  if (!foundUser.isSuspended)
+    responseMessage(
+      res,
+      400,
+      false,
+      "User is suspended from accessing the platform."
+    ); // Unauthorised
+
   // Evaluate password
   const match = await bcrypt.compare(password, foundUser.password);
   if (match) {

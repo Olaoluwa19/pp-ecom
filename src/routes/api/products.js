@@ -9,9 +9,10 @@ const {
   getProductCount,
   getFeaturedProduct,
   getProductCategory,
-  getUserProducts,
-  updateGalleryImages,
   getProduct,
+  updateGalleryImages,
+  getUserProducts,
+  countUserProduct,
 } = require("../../controller/APIController/productsController");
 const ROLES_LIST = require("../../config/roles_list");
 const verifyRoles = require("../../middleware/verifyRoles");
@@ -34,29 +35,31 @@ router
 router
   .route("/count")
   .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getProductCount);
+
+router
+  .route("/count/:userid")
+  .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), countUserProduct);
+
 router
   .route("/featured/:count")
   .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getFeaturedProduct);
+
 router
   .route("/category/:category")
   .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getProductCategory);
-router
-  .route("/userproducts/:userid")
-  .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getUserProducts);
-// router
-//   .route("/update/:userid?")
-//   .put(
-//     verifyRoles(ROLES_LIST.Seller),
-//     uploadOptions.single("image"),
-//     updateProduct
-//   );
+
 router
   .route("/gallery-images/:id")
   .put(
-    verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller),
+    verifyRoles(ROLES_LIST.Seller),
     uploadOptions.array("images", 10),
     updateGalleryImages
   );
+
+router
+  .route("/userproducts/:userid")
+  .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getUserProducts);
+
 router
   .route("/:id")
   .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getProduct);

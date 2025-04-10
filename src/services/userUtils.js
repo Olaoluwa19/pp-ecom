@@ -1,4 +1,5 @@
 const User = require("../model/User");
+const bcrypt = require("bcryptjs");
 
 const findUserById = async (userId) => {
   return await User.findOne({ _id: userId }).exec();
@@ -14,16 +15,32 @@ const checkDuplicateUser = async (username, roles) => {
   return await User.findOne({ username: username, roles: roles }).exec();
 };
 
-const createUser = async (userData, addressId) => {
-  const { username, roles, password, email, phone } = userData;
+const encryptPassword = async (password) => {
+  return await bcrypt.hash(password, 10);
+};
+
+const createUserFields = async (req, hashedPwd, addressId) => {
   return await User.create({
-    username,
-    roles,
-    password,
-    email,
-    phone,
+    username: req.body.username,
+    roles: req.body.roles,
+    password: hashedPwd,
+    email: req.body.email,
+    phone: req.body.phone,
     address: addressId,
   });
+};
+
+const updateUserFields = async (req, user, pwd, addId) => {
+  if (req?.body?.password) user.password = pwd;
+  if (req?.body?.email) user.email = req.body.email;
+  if (req?.body?.phone) user.phone = req.body.phone;
+  if (req?.body?.address) user.address = addId;
+
+  return await user.save();
+};
+
+const deleUserFields = async (id) => {
+  return await User.deleteOne(id);
 };
 
 const getPopulatedUser = async (userId) => {
@@ -40,6 +57,9 @@ module.exports = {
   findUserById,
   findUserByEmailOrPhone,
   checkDuplicateUser,
-  createUser,
+  encryptPassword,
+  createUserFields,
+  updateUserFields,
+  deleUserFields,
   getPopulatedUser,
 };

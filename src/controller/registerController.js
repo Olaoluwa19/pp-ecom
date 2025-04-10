@@ -1,8 +1,8 @@
-const bcrypt = require("bcryptjs");
 const { validatePassword, responseMessage } = require("../services/utils");
 const {
   checkDuplicateUser,
-  createUser,
+  createUserFields,
+  encryptPassword,
   getPopulatedUser,
 } = require("../services/userUtils");
 const { createAddress } = require("../services/addressUtils");
@@ -59,19 +59,10 @@ const createNewUser = async (req, res) => {
     const addressDoc = await createAddress({ body: { ...address } });
 
     // encrypt the password
-    const hashedPwd = await bcrypt.hash(password, 10);
+    const hashedPwd = await encryptPassword(password);
 
-    // createUser document
-    const userData = {
-      username,
-      email,
-      phone,
-      password: hashedPwd,
-      address: addressDoc._id,
-      roles,
-    };
-
-    const newUser = await createUser(userData, addressDoc._id);
+    // createUserFields document
+    const newUser = await createUserFields(req, hashedPwd, addressDoc._id);
 
     const populatedUser = await getPopulatedUser(newUser._id);
 

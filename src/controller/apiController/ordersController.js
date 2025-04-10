@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const Order = require("../../model/apiModel/Order");
 const OrderItem = require("../../model/apiModel/OrderItem");
-const Address = require("../../model/Address");
 const { findOrderById, deleteOrderById } = require("../../services/orderUtils");
 const {
   findOrderItemById,
@@ -321,8 +320,6 @@ const getOrdersCountByStatus = async (req, res) => {
 };
 
 const getUserOrders = async (req, res) => {
-  // const order = await Order.findOne({ _id: req.params.id })
-
   const userOrders = await Order.find({ user: req.params.userid })
     .populate({
       path: "orderItems",
