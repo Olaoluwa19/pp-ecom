@@ -18,12 +18,8 @@ const getAllUser = async (req, res) => {
     const users = await User.find().select("-password");
     const count = await User.countDocuments();
 
-    return responseMessage(
-      res,
-      200,
-      true,
-      `{count: ${count}, users: ${users}}`
-    );
+    // Return both count and users as a JSON object
+    res.json({ count, users });
   } catch (error) {
     console.error(error);
     return responseMessage(
@@ -59,17 +55,25 @@ const updateUser = async (req, res) => {
     );
 
   const user = await findUserById(id);
+  if (!user) return responseMessage(res, 400, false, "User not found.");
 
   const existingAddress = await findAddressById(user.address);
 
-  const hashedPwd = await encryptPassword(password);
+  const addressDoc = existingAddress
+    ? await updateAddress({ body: { ...address } }, existingAddress)
+    : await createAddress({ body: { ...address } });
+
   try {
-    const addressDoc = existingAddress
-      ? await updateAddress({ body: { ...address } }, existingAddress)
-      : await createAddress({ body: { ...address } });
+    let hashedPwd;
+    if (password) {
+      hashedPwd = await encryptPassword(password);
+    }
 
     const result = await updateUserFields(req, user, hashedPwd, addressDoc._id);
-    res.json(result);
+    const populatedUser = await User.findOne({ _id: result.id })
+      .populate("address")
+      .exec();
+    res.json(populatedUser);
   } catch (error) {
     console.error(error);
     return responseMessage(

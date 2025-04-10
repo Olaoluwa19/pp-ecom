@@ -24,7 +24,7 @@ const handleLogin = async (req, res) => {
   if (!foundUser)
     return responseMessage(res, 400, false, "Incorrect phone number or email"); // Unauthorised
 
-  if (!foundUser.isSuspended)
+  if (foundUser.isSuspended)
     responseMessage(
       res,
       400,

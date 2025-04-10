@@ -15,11 +15,11 @@ const createAddress = async (req) => {
 };
 
 const updateAddress = async (req, address) => {
-  if (req?.body?.street) address.street = street;
+  if (req?.body?.street) address.street = req.body.street;
   if (req?.body?.apartment) address.apartment = req.body.apartment;
   if (req?.body?.zip) address.zip = req.body.zip;
-  if (req?.body?.city) address.city = city;
-  if (req?.body?.country) address.country = country;
+  if (req?.body?.city) address.city = req.body.city;
+  if (req?.body?.country) address.country = req.body.country;
 
   return await address.save();
 };

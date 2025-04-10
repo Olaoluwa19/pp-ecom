@@ -34,3 +34,5 @@
 20250323	16:43:51	89d404d3-09b8-444f-af5f-2c8f8176dd85	SyntaxError : Expected ',' or '}' after property value in JSON at position 45
 20250401	03:44:20	f1c82d9f-96d4-45ef-9fb6-c387f789c337	SyntaxError : Unexpected token 't', "tUser{
   "... is not valid JSON
+20250410	06:42:24	ef57390d-3709-472d-9548-1203039d8f72	SyntaxError : Expected double-quoted property name in JSON at position 119
+20250410	07:10:51	40e9f79a-2ff5-4f5d-8776-ec18874d5e3a	SyntaxError : Expected double-quoted property name in JSON at position 105
