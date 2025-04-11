@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const User = require("../../model/User");
+const { serverErrorMessage } = require("../../services/utils");
 const {
   findUserById,
   encryptPassword,
@@ -21,13 +22,7 @@ const getAllUser = async (req, res) => {
     // Return both count and users as a JSON object
     res.json({ count, users });
   } catch (error) {
-    console.error(error);
-    return responseMessage(
-      res,
-      500,
-      false,
-      `Internal Server Error: ${error.message}`
-    );
+    return serverErrorMessage(res, error);
   }
 };
 
@@ -75,13 +70,7 @@ const updateUser = async (req, res) => {
       .exec();
     res.json(populatedUser);
   } catch (error) {
-    console.error(error);
-    return responseMessage(
-      res,
-      500,
-      false,
-      `Internal Server error: ${error.message}`
-    );
+    return serverErrorMessage(res, error);
   }
 };
 
@@ -95,15 +84,14 @@ const deleteUser = async (req, res) => {
     return responseMessage(res, 400, false, `Invalid ID: ${id} provided.`);
 
   const user = await findUserById(id);
-  if (!user) responseMessage(res, 400, false, "User not found.");
+  if (!user) return responseMessage(res, 400, false, "User not found.");
 
   try {
     const result = await deleteUserFields(user._id);
 
     res.json(result);
   } catch (error) {
-    console.error(error.message);
-    return responseMessage(res, 500, false, "Internal Server error");
+    return serverErrorMessage(res, error);
   }
 };
 
@@ -123,7 +111,7 @@ const countUserRoles = async (req, res) => {
   const { role } = req.params;
   if (!role) return responseMessage(res, 400, false, "Role is required.");
 
-  if (![2000, 1995, 5919].includes(role))
+  if (![2000, 1995, 5919].includes(Number(role)))
     return responseMessage(
       res,
       400,
@@ -133,56 +121,46 @@ const countUserRoles = async (req, res) => {
 
   try {
     const count = await User.countDocuments({ roles: role });
-    const user = await User.find({ roles: role }).exec();
-    console.log(user);
+    const users = await User.find({ roles: role }).select("-password").exec();
+    console.log(users);
 
-    return responseMessage(
-      res,
-      200,
-      true,
-      `There are {${count}} users with the role ${role}. ${user}`
-    );
-  } catch (err) {
-    console.error(err);
-    return responseMessage(
-      res,
-      500,
-      false,
-      `Error fetching user count: ${err.message}`
-    );
+    return res.json({ count, users });
+  } catch (error) {
+    return serverErrorMessage(res, error);
   }
 };
 
-const getUserCount = async (req, res) => {
-  try {
-    const count = await User.countDocuments();
-    return responseMessage(
-      res,
-      200,
-      true,
-      `There are ${count} users in the database.`
-    );
-  } catch (err) {
-    console.error(err);
-    return responseMessage(
-      res,
-      500,
-      false,
-      `Error fetching user count: ${err.message}`
-    );
-  }
-};
-
-const suspendUser = async () => {
+const suspendUser = async (req, res) => {
   const { id, isSuspended } = req.body;
-  const user = await User.findOne({ _id: id }).exec();
-  if (isSuspended) user.isSuspended = isSuspended;
+  if (!id) return responseMessage(res, 400, false, "User ID is required.");
 
-  await user.save();
-  const result = isSuspended
-    ? responseMessage(`User: ${user} has being suspended`)
-    : responseMessage(`User: ${user} has being Unsuspended`);
-  return result;
+  if (!validMongooseId(id))
+    return responseMessage(res, 400, false, `Invalid ID: ${id} provided.`);
+
+  const user = await findUserById(id);
+  if (!user) return responseMessage(res, 400, false, "User not found.");
+
+  try {
+    if (isSuspended !== undefined) user.isSuspended = isSuspended;
+    await user.save();
+
+    console.log(user);
+    return isSuspended
+      ? responseMessage(
+          res,
+          200,
+          true,
+          `User: ${user.username} has been suspended`
+        )
+      : responseMessage(
+          res,
+          200,
+          true,
+          `User: ${user.username} has been unsuspended`
+        );
+  } catch (error) {
+    return serverErrorMessage(res, error);
+  }
 };
 
 module.exports = {
@@ -191,6 +169,5 @@ module.exports = {
   deleteUser,
   getUser,
   countUserRoles,
-  getUserCount,
   suspendUser,
 };

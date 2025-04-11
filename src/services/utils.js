@@ -17,6 +17,16 @@ const responseMessage = (res, resStat, sucStat, resMsg) => {
   });
 };
 
+const serverErrorMessage = (res, error) => {
+  console.error(error);
+  return responseMessage(
+    res,
+    500,
+    false,
+    `"Internal Server Error—please try again or contact support."`
+  );
+};
+
 const getImage = async (req) => {
   const fileName = req.file.filename;
   const basePath = `${req.protocol}://${req.get("host")}/public/upload/`;
@@ -42,6 +52,7 @@ module.exports = {
   validMongooseId,
   validatePassword,
   responseMessage,
+  serverErrorMessage,
   getImage,
   getGalleryImages,
 };

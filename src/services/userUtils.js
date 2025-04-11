@@ -39,7 +39,7 @@ const updateUserFields = async (req, user, pwd, addId) => {
   return await user.save();
 };
 
-const deleUserFields = async (id) => {
+const deleteUserFields = async (id) => {
   return await User.deleteOne(id);
 };
 
@@ -60,6 +60,6 @@ module.exports = {
   encryptPassword,
   createUserFields,
   updateUserFields,
-  deleUserFields,
+  deleteUserFields,
   getPopulatedUser,
 };
