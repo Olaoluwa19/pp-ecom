@@ -1,7 +1,10 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { responseMessage } = require("../services/utils");
-const { findUserByEmailOrPhone } = require("../services/userUtils");
+const {
+  findUserByEmailOrPhone,
+  getPopulatedUser,
+} = require("../services/userUtils");
 
 const handleLogin = async (req, res) => {
   const { user, email, phone, password } = req.body;
@@ -25,7 +28,7 @@ const handleLogin = async (req, res) => {
     return responseMessage(res, 400, false, "Incorrect phone number or email"); // Unauthorised
 
   if (foundUser.isSuspended)
-    responseMessage(
+    return responseMessage(
       res,
       400,
       false,
@@ -55,7 +58,8 @@ const handleLogin = async (req, res) => {
     // Saving refreshToken with current user
     foundUser.refreshToken = refreshToken;
     const result = await foundUser.save();
-    console.log(result);
+    const populatedUser = await getPopulatedUser(result._id);
+    console.log(populatedUser);
 
     res.cookie("jwt", refreshToken, {
       httpOnly: true,

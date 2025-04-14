@@ -144,7 +144,6 @@ const suspendUser = async (req, res) => {
     if (isSuspended !== undefined) user.isSuspended = isSuspended;
     await user.save();
 
-    console.log(user);
     return isSuspended
       ? responseMessage(
           res,

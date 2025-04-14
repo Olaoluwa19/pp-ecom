@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const productSchema = new Schema(
   {
-    user: {
+    seller: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,

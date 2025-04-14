@@ -9,12 +9,13 @@ const {
   updateProductImages,
 } = require("../../services/productUtils");
 
-const { findUserById } = require("../../services/userUtils");
+const { findSellerById } = require("../../services/userUtils");
 
 const { findCategoryById } = require("../../services/categoryUtils");
 const {
   validMongooseId,
   responseMessage,
+  serverErrorMessage,
   getImage,
   getGalleryImages,
 } = require("../../services/utils");
@@ -30,10 +31,10 @@ const getAllProduct = async (req, res) => {
 };
 
 const createNewProduct = async (req, res) => {
-  const { user, name, image, description, countInStock, category } = req.body;
+  const { seller, name, image, description, countInStock, category } = req.body;
 
   // check for required fields
-  if (!user || !name || !description || !countInStock || !category) {
+  if (!seller || !name || !description || !countInStock || !category) {
     return responseMessage(res, 400, false, "Required fields are missing");
   }
 
@@ -43,13 +44,18 @@ const createNewProduct = async (req, res) => {
     return responseMessage(res, 400, false, "No image files detected.");
 
   // check if uder ID is valid
-  if (!validMongooseId(user))
-    return responseMessage(res, 400, false, `Invalid user ID: ${user}.`);
+  if (!validMongooseId(seller))
+    return responseMessage(res, 400, false, `Invalid seller ID: ${seller}.`);
 
-  // check if user exists
-  const validUser = await findUserById(user);
-  if (!validUser)
-    return responseMessage(res, 400, false, "No User matches the ID provided");
+  // check if seller exists
+  const validSeller = await findSellerById(seller);
+  if (!validSeller)
+    return responseMessage(
+      res,
+      400,
+      false,
+      "No Seller matches the ID provided"
+    );
 
   // check if category ID is valid
   if (!validMongooseId(category))
@@ -78,8 +84,7 @@ const createNewProduct = async (req, res) => {
     console.log(populatedResult);
     res.status(201).json(populatedResult);
   } catch (error) {
-    console.error(error);
-    return responseMessage(res, 500, false, `Error in creating product`);
+    return serverErrorMessage(res, error);
   }
 };
 
@@ -134,13 +139,7 @@ const updateProduct = async (req, res) => {
     );
     res.json(result);
   } catch (error) {
-    console.error(error);
-    return responseMessage(
-      res,
-      500,
-      false,
-      `Error in updating product: ${error.message}`
-    );
+    serverErrorMessage(res, error);
   }
 };
 
@@ -180,40 +179,33 @@ const getProductCount = async (req, res) => {
       true,
       `There are ${count} products in the database.`
     );
-  } catch (err) {
-    console.error(err);
-    responseMessage(
-      res,
-      500,
-      false,
-      `Error fetching product count: ${err.message}`
-    );
+  } catch (error) {
+    return serverErrorMessage(res, error);
   }
 };
 
-const countUserProduct = async () => {
-  const userid = req.params.userid;
-  if (!validMongooseId(userid))
+const countSellerProduct = async () => {
+  const sellerid = req.params.sellerid;
+  if (!validMongooseId(sellerid))
     responseMessage(
       res,
       400,
       false,
-      `The ID: ${userid} provided is an invalid ID.`
+      `The ID: ${sellerid} provided is an invalid ID.`
     );
 
   try {
-    const productCount = await Product.countDocuments({ user: userid });
+    const productCount = await Product.countDocuments({ seller: sellerid });
 
     if (productCount)
       return responseMessage(
         res,
         200,
         false,
-        `This User: ${userid} has ${productCount} products in database.`
+        `This Seller: ${sellerid} has ${productCount} products in database.`
       );
   } catch (error) {
-    console.error(error);
-    return responseMessage(res, 200, false, `error: ${error.message}`);
+    return serverErrorMessage(res, error);
   }
 };
 
@@ -237,9 +229,8 @@ const getFeaturedProduct = async (req, res) => {
     }
 
     res.json(featureProducts);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal Server Error" });
+  } catch (error) {
+    return serverErrorMessage(res, error);
   }
 };
 
@@ -300,38 +291,31 @@ const updateGalleryImages = async (req, res) => {
     const result = await updateProductImages(req, product, imagePaths);
     res.status(201).json(result);
   } catch (error) {
-    console.error(error);
-    return responseMessage(res, 500, false, `Error in uploading image gallery`);
+    return serverErrorMessage(res, error);
   }
 };
 
-const getUserProducts = async (req, res) => {
+const getSellerProducts = async (req, res) => {
   try {
-    const userid = req.params.userid;
-    if (!validMongooseId(userid))
+    const sellerid = req.params.sellerid;
+    if (!validMongooseId(sellerid))
       responseMessage(
         res,
         400,
         false,
-        `The ID: ${userid} provided is an invalid ID.`
+        `The ID: ${sellerid} provided is an invalid ID.`
       );
-    const userProducts = await Product.find({ user: userid })
+    const sellerProducts = await Product.find({ seller: sellerid })
       .populate("category")
       .sort({ createdAt: -1 })
       .exec();
-    if (!userProducts || userProducts.length === 0) {
+    if (!sellerProducts || sellerProducts.length === 0) {
       return responseMessage(res, 400, false, `No products found.`);
     }
-    console.log(userProducts);
-    res.json(userProducts);
+    console.log(sellerProducts);
+    res.json(sellerProducts);
   } catch (error) {
-    console.log(error);
-    return responseMessage(
-      res,
-      500,
-      false,
-      `Error fetching user products: ${error.message}`
-    );
+    return serverErrorMessage(res, error);
   }
 };
 
@@ -360,10 +344,10 @@ module.exports = {
   updateProduct,
   deleteProduct,
   getProductCount,
-  countUserProduct,
+  countSellerProduct,
   getFeaturedProduct,
   getProductCategory,
   getProduct,
   updateGalleryImages,
-  getUserProducts,
+  getSellerProducts,
 };

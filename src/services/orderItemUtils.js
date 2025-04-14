@@ -5,7 +5,7 @@ const findOrderItemById = async (id) => {
 };
 
 const findAndPopulateOrderItemProductPrice = async (id) => {
-  return await OrderItem.findById(id).populate("product", "price").lean();
+  return await OrderItem.findById(id).populate("product", "price").lean(); // Use lean() for performance since we only need data
 };
 
 const creatOrderItem = async (req) => {

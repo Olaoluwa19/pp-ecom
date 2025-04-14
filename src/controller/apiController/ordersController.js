@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Order = require("../../model/apiModel/Order");
 const OrderItem = require("../../model/apiModel/OrderItem");
+const { findUserById } = require("../../services/userUtils");
 const { findOrderById, deleteOrderById } = require("../../services/orderUtils");
 const {
   findOrderItemById,
@@ -11,7 +12,11 @@ const {
   findAddressById,
   createAddress,
 } = require("../../services/addressUtils");
-const { validMongooseId, responseMessage } = require("../../services/utils");
+const {
+  validMongooseId,
+  responseMessage,
+  serverErrorMessage,
+} = require("../../services/utils");
 
 const getAllOrders = async (req, res) => {
   const orderList = await Order.find()
@@ -26,6 +31,28 @@ const getAllOrders = async (req, res) => {
 const createNewOrder = async (req, res) => {
   const { orderItems, shippingAddress1, shippingAddress2, phone, user } =
     req.body;
+
+  if (!user)
+    return responseMessage(
+      res,
+      400,
+      false,
+      "You need a valid user id to create an order"
+    );
+
+  if (!validMongooseId(user))
+    return responseMessage(res, 400, false, `Invalid ID:${user} provided`);
+
+  // Check if user exists
+  const validUser = await findUserById(user);
+
+  if (!validUser)
+    return responseMessage(
+      res,
+      400,
+      false,
+      `No user found with the id: ${user}`
+    );
 
   // Validate required fields
   if (!orderItems?.length || !shippingAddress1 || !phone) {
@@ -42,7 +69,7 @@ const createNewOrder = async (req, res) => {
 
       const populatedItem = await findAndPopulateOrderItemProductPrice(
         newOrderItem._id
-      ); // Use lean() for performance since we only need data
+      );
 
       totalPrice += populatedItem.product.price * item.quantity;
       orderItemIds.push(newOrderItem._id);
@@ -64,10 +91,37 @@ const createNewOrder = async (req, res) => {
       user,
     });
 
-    res.status(201).json(order);
+    const populatedOrder = await Order.findOne(order._id)
+      .populate([
+        {
+          path: "user",
+          select: "username email phone",
+        },
+        {
+          path: "orderItems",
+          populate: {
+            path: "product",
+            select: "-createdAt -updatedAt -__v",
+            populate: {
+              path: "category",
+              select: "-createdAt -updatedAt -__v",
+            },
+          },
+        },
+        {
+          path: "shippingAddress1",
+          select: "-createdAt -updatedAt -__v",
+        },
+        {
+          path: "shippingAddress2",
+          select: "-createdAt -updatedAt -__v",
+        },
+      ])
+      .exec();
+
+    res.status(201).json(populatedOrder);
   } catch (error) {
-    console.error(error);
-    responseMessage(res, 500, false, "Error creating order", error);
+    return serverErrorMessage(res, error);
   }
 };
 
@@ -80,7 +134,7 @@ const getOrder = async (req, res) => {
       res,
       400,
       false,
-      `No Order ID matches ${req.params.id}.`
+      `Invalid Order ID: ${req.params.id}.`
     );
 
   try {
@@ -109,15 +163,16 @@ const getOrder = async (req, res) => {
       ])
       .exec();
 
-    res.json(order);
+    return order
+      ? res.json(order)
+      : responseMessage(
+          res,
+          400,
+          false,
+          `No Order with id: ${req.params.id} Found.`
+        );
   } catch (error) {
-    console.error(error);
-    return responseMessage(
-      res,
-      500,
-      false,
-      `Error fetching order: ${error.message}`
-    );
+    return serverErrorMessage(res, error);
   }
 };
 
@@ -197,8 +252,7 @@ const deleteOrder = async (req, res) => {
       `Order ${orderId} deleted successfully`
     );
   } catch (error) {
-    console.error("Delete order error:", error);
-    return responseMessage(res, 500, false, `Server error: ${error.message}`);
+    return serverErrorMessage(res, error);
   }
 };
 
@@ -230,45 +284,49 @@ const getSalesByStatus = async (req, res) => {
     query = { status }; // filter by status if valid
   }
 
-  // Perform aggregation to sum totalPrice
-  const salesByStatus = await Order.aggregate([
-    // Filter for orders with the specified status (if provided)
-    {
-      $match: query, // Empty object matches all documents when no status is given
-    },
-    // Group and sum the totalPrice
-    {
-      $group: {
-        _id: null,
-        totalSales: {
-          $sum: "$totalPrice",
+  try {
+    // Perform aggregation to sum totalPrice
+    const salesByStatus = await Order.aggregate([
+      // Filter for orders with the specified status (if provided)
+      {
+        $match: query, // Empty object matches all documents when no status is given
+      },
+      // Group and sum the totalPrice
+      {
+        $group: {
+          _id: null,
+          totalSales: {
+            $sum: "$totalPrice",
+          },
         },
       },
-    },
-  ]);
+    ]);
 
-  // Check if there are any results
-  if (salesByStatus.length === 0) {
+    // Check if there are any results
+    if (salesByStatus.length === 0) {
+      return responseMessage(
+        res,
+        200,
+        true,
+        status
+          ? `No ${status} orders found { totalSales: 0 }`
+          : "No orders found { totalSales: 0 }"
+      );
+    }
+
+    // Extract totalSales value from the aggregation result
+    const result = salesByStatus[0].totalSales;
     return responseMessage(
       res,
       200,
       true,
       status
-        ? `No ${status} orders found { totalSales: 0 }`
-        : "No orders found { totalSales: 0 }"
+        ? res.json({ status: status, "total sales": result })
+        : res.json({ totalSales: result })
     );
+  } catch (error) {
+    return serverErrorMessage(res, error);
   }
-
-  // Extract totalSales value from the aggregation result
-  const result = salesByStatus[0].totalSales;
-  return responseMessage(
-    res,
-    200,
-    true,
-    status
-      ? `Total sales for ${status} orders { totalSales: ${result} }`
-      : `Total sales for all orders { totalSales: ${result} }`
-  );
 };
 
 const getOrdersCountByStatus = async (req, res) => {
@@ -312,10 +370,10 @@ const getOrdersCountByStatus = async (req, res) => {
     const message = status
       ? `Found ${count} ${status} orders`
       : `Found ${count} total orders`;
-    return responseMessage(res, 200, true, `${message}: {count: ${count} }`);
-  } catch (err) {
-    console.error(err);
-    return responseMessage(res, 500, false, "Internal Server Error");
+
+    return res.json({ message: message, count: count });
+  } catch (error) {
+    return serverErrorMessage(res, error);
   }
 };
 

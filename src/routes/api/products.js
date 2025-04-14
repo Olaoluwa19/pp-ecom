@@ -11,8 +11,8 @@ const {
   getProductCategory,
   getProduct,
   updateGalleryImages,
-  getUserProducts,
-  countUserProduct,
+  getSellerProducts,
+  countSellerProduct,
 } = require("../../controller/APIController/productsController");
 const ROLES_LIST = require("../../config/roles_list");
 const verifyRoles = require("../../middleware/verifyRoles");
@@ -38,7 +38,7 @@ router
 
 router
   .route("/count/:userid")
-  .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), countUserProduct);
+  .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), countSellerProduct);
 
 router
   .route("/featured/:count")
@@ -58,7 +58,7 @@ router
 
 router
   .route("/userproducts/:userid")
-  .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getUserProducts);
+  .get(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.Seller), getSellerProducts);
 
 router
   .route("/:id")
