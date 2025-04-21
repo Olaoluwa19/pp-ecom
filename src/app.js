@@ -45,6 +45,9 @@ app.use(cookieParser());
 // serve static files
 app.use("/", express.static(path.join(__dirname, "/public")));
 
+// health check route
+app.get("/health", (req, res) => res.json({ status: "OK" }));
+
 // ROUTE
 app.use("/", require("./routes/api"));
 

@@ -1,12 +1,25 @@
 module.exports = {
   apps: [
     {
+      name: "server",
       script: "src/server.js",
-      watch: ".",
-    },
-    {
-      script: "./service-worker/",
-      watch: ["./service-worker"],
+      instances: "1", //"max" for production
+      exec_mode: "fork", // "cluster" for production
+      watch: process.env.NODE_ENV !== "production",
+      env_production: {
+        NODE_ENV: "production",
+        PORT: 8000,
+      },
+      env_development: {
+        NODE_ENV: "development",
+        PORT: 3000,
+      },
+      max_memory_restart: "750M",
+      autorestart: true,
+      max_restarts: 10,
+      restart_delay: 4000,
+      error_file: "src/logs/error.log",
+      out_file: "src/logs/output.log",
     },
   ],
 
@@ -19,7 +32,7 @@ module.exports = {
       path: "DESTINATION_PATH",
       "pre-deploy-local": "",
       "post-deploy":
-        "npm install && pm2 reload ecosystem.config.js --env production",
+        "npm install && pm2 reload ecosystem.config.js --env production && curl http://localhost:8000/health",
       "pre-setup": "",
     },
   },
