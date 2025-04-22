@@ -1,9 +1,0 @@
-20250417	03:46:29	04674372-f297-4ef2-a78e-09515a1dbd4d	GET	undefined	/
-20250417	03:46:29	456e4926-3cd5-4d2a-a4ff-334cc4f07101	GET	undefined	/css/style.css
-20250417	03:46:29	b085774a-7015-42a1-a989-f1912a776c00	GET	undefined	/favicon.ico
-20250417	04:21:15	a360aa51-e9c6-4bdf-b383-73a89107e89a	GET	undefined	/
-20250417	04:21:17	d59db57e-eaa1-4c6d-ad00-6455dec83045	GET	undefined	/css/style.css
-20250417	04:21:19	ce561491-1a96-47e1-93fb-1ca752c8d459	GET	undefined	/favicon.ico
-20250418	05:43:12	7a11ec48-cdb5-4b82-b08d-db1598a009b5	GET	undefined	/
-20250418	05:43:14	0c0feda3-2e51-4a61-9d4f-8650b69a844d	GET	undefined	/favicon.ico
-20250418	05:43:13	a10cd4b7-1867-44b1-91b0-9badb2d40f77	GET	undefined	/css/style.css
