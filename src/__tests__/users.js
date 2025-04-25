@@ -1,35 +1,29 @@
 const request = require("supertest");
 const express = require("express");
 const mongoose = require("mongoose");
-const APIController = require("../../controller/APIController/usersController");
-const User = require("../../model/User");
-const Address = require("../../model/Address");
-const { serverErrorMessage, responseMessage } = require("../../services/utils");
+const APIController = require("../controller/APIController/usersController");
+const User = require("../model/User");
+const Address = require("../model/Address");
+const { serverErrorMessage, responseMessage } = require("../services/utils");
 const {
   findUserById,
   encryptPassword,
   updateUserFields,
   deleteUserFields,
-} = require("../../services/userUtils");
+} = require("../services/userUtils");
 const {
   findAddressById,
   createAddress,
   updateAddress,
-} = require("../../services/addressUtils");
-const verifyJWT = require("../../middleware/verifyJWT");
-const verifyRoles = require("../../middleware/verifyRoles");
-const ROLES_LIST = require("../../config/roles_list");
+} = require("../services/addressUtils");
+const verifyJWT = require("../middleware/verifyJWT");
+const verifyRoles = require("../middleware/verifyRoles");
+const ROLES_LIST = require("../config/roles_list");
 
 // Mock middleware
-jest.mock("../../middleware/verifyJWT", () =>
-  jest.fn((req, res, next) => {
-    req.user = "testuser@example.com";
-    req.roles = [ROLES_LIST.Admin]; // Simulate Admin role (5919)
-    next();
-  })
-);
+jest.mock("../middleware/verifyJWT.js");
 jest.mock(
-  "../../middleware/verifyRoles",
+  "../middleware/verifyRoles",
   () =>
     (...allowedRoles) =>
     (req, res, next) => {
@@ -49,11 +43,11 @@ const errorHandler = jest.fn((err, req, res, next) => {
 });
 
 // Mock Mongoose models and utility functions
-jest.mock("../../model/User");
-jest.mock("../../model/Address");
-jest.mock("../../services/userUtils");
-jest.mock("../../services/addressUtils");
-jest.mock("../../services/utils");
+jest.mock("../model/User.js");
+jest.mock("../model/Address");
+jest.mock("../services/userUtils");
+jest.mock("../services/addressUtils");
+jest.mock("../services/utils");
 
 // Mock Express app with correct routes
 const app = express();
@@ -81,10 +75,16 @@ app.use(errorHandler);
 describe("APIController", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Set default verifyJWT mock for Admin role
+    verifyJWT.mockImplementation((req, res, next) => {
+      req.user = "testuser@example.com";
+      req.roles = [ROLES_LIST.Admin]; // Admin role (5919)
+      next();
+    });
   });
 
   describe("getAllUser", () => {
-    it("should return all users and count", async () => {
+    it("should return all users and count for Admin", async () => {
       const mockUsers = [
         { _id: "1", username: "user1", email: "user1@example.com" },
         { _id: "2", username: "user2", email: "user2@example.com" },
@@ -101,6 +101,19 @@ describe("APIController", () => {
       expect(User.find).toHaveBeenCalled();
       expect(User.countDocuments).toHaveBeenCalled();
       expect(verifyRoles).toHaveBeenCalledWith(ROLES_LIST.Admin);
+    });
+
+    it("should return 401 for non-Admin", async () => {
+      verifyJWT.mockImplementationOnce((req, res, next) => {
+        req.user = "testuser@example.com";
+        req.roles = [ROLES_LIST.User]; // Non-Admin role (2000)
+        next();
+      });
+
+      const res = await request(app).get("/api/users");
+
+      expect(res.status).toBe(401);
+      expect(User.find).not.toHaveBeenCalled();
     });
 
     it("should handle server error", async () => {
@@ -193,7 +206,7 @@ describe("APIController", () => {
   });
 
   describe("deleteUser", () => {
-    it("should delete user successfully", async () => {
+    it("should delete user successfully for Admin", async () => {
       const mockUser = { _id: "1", username: "user1" };
       findUserById.mockResolvedValue(mockUser);
       deleteUserFields.mockResolvedValue({ deletedCount: 1 });
@@ -205,6 +218,19 @@ describe("APIController", () => {
       expect(findUserById).toHaveBeenCalledWith("1");
       expect(deleteUserFields).toHaveBeenCalledWith("1");
       expect(verifyRoles).toHaveBeenCalledWith(ROLES_LIST.Admin);
+    });
+
+    it("should return 401 for non-Admin", async () => {
+      verifyJWT.mockImplementationOnce((req, res, next) => {
+        req.user = "testuser@example.com";
+        req.roles = [ROLES_LIST.User]; // Non-Admin role (2000)
+        next();
+      });
+
+      const res = await request(app).delete("/api/users").send({ id: "1" });
+
+      expect(res.status).toBe(401);
+      expect(findUserById).not.toHaveBeenCalled();
     });
 
     it("should return 400 if user not found", async () => {
@@ -256,7 +282,7 @@ describe("APIController", () => {
   });
 
   describe("countUserRoles", () => {
-    it("should return count and users for valid role", async () => {
+    it("should return count and users for valid role for Admin", async () => {
       const mockUsers = [{ _id: "1", username: "user1", roles: "2000" }];
       User.countDocuments.mockResolvedValue(1);
       User.find.mockReturnValue({
@@ -271,6 +297,19 @@ describe("APIController", () => {
       expect(res.body).toEqual({ count: 1, users: mockUsers });
       expect(User.countDocuments).toHaveBeenCalledWith({ roles: "2000" });
       expect(verifyRoles).toHaveBeenCalledWith(ROLES_LIST.Admin);
+    });
+
+    it("should return 401 for non-Admin", async () => {
+      verifyJWT.mockImplementationOnce((req, res, next) => {
+        req.user = "testuser@example.com";
+        req.roles = [ROLES_LIST.User]; // Non-Admin role (2000)
+        next();
+      });
+
+      const res = await request(app).get("/api/users/role/2000");
+
+      expect(res.status).toBe(401);
+      expect(User.countDocuments).not.toHaveBeenCalled();
     });
 
     it("should return 400 for invalid role", async () => {
@@ -289,7 +328,7 @@ describe("APIController", () => {
   });
 
   describe("suspendUser", () => {
-    it("should suspend user successfully", async () => {
+    it("should suspend user successfully for Admin", async () => {
       const mockUser = {
         _id: "1",
         username: "user1",
@@ -315,7 +354,22 @@ describe("APIController", () => {
       expect(verifyRoles).toHaveBeenCalledWith(ROLES_LIST.Admin);
     });
 
-    it("should unsuspend user successfully", async () => {
+    it("should return 401 for non-Admin", async () => {
+      verifyJWT.mockImplementationOnce((req, res, next) => {
+        req.user = "testuser@example.com";
+        req.roles = [ROLES_LIST.User]; // Non-Admin role (2000)
+        next();
+      });
+
+      const res = await request(app)
+        .put("/api/users/suspend")
+        .send({ id: "1", isSuspended: true });
+
+      expect(res.status).toBe(401);
+      expect(findUserById).not.toHaveBeenCalled();
+    });
+
+    it("should unsuspend user successfully for Admin", async () => {
       const mockUser = {
         _id: "1",
         username: "user1",
