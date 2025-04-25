@@ -2,6 +2,8 @@ name: PP-ECOM
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 jobs:
   build:
@@ -11,15 +13,19 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: '20'
-
+        cache: 'npm' # Cache npm dependencies for faster runs
     - name: Install dependencies
       run: npm install
-
     - name: Run tests
       run: npm test
-
-    - name: Build project
-      run: npm run build
-
-    - name: Deploy to production
-      run: npm run deploy --if-present
+      env:
+        # Add environment variables if needed
+        MONGO_URI: ${{ secrets.MONGO_URI }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+    # Remove build step if not needed
+    # - name: Build project
+    #   run: npm run build
+    # Add deployment step only if you have a deploy script
+    # - name: Deploy to production
+    #   if: github.ref == 'refs/heads/main' # Run only on main branch
+    #   run: npm run deploy
