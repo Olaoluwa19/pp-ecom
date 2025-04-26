@@ -1,13 +1,16 @@
 const mongoose = require("mongoose");
 const User = require("../../model/User");
-const { serverErrorMessage } = require("../../services/utils");
 const {
   findUserById,
   encryptPassword,
   updateUserFields,
   deleteUserFields,
 } = require("../../services/userUtils");
-const { responseMessage, validMongooseId } = require("../../services/utils");
+const {
+  responseMessage,
+  validMongooseId,
+  serverErrorMessage,
+} = require("../../services/utils");
 const {
   findAddressById,
   createAddress,
