@@ -11,7 +11,7 @@ const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
 const cookieParser = require("cookie-parser");
 const credentials = require("./middleware/credentials");
-const { sessionConfig, googleConfig } = require("./config/authConfig");
+const { sessionConfig } = require("./config/authConfig");
 const googleLogin = require("./middleware/OAuthHandler");
 
 // custom middleware logger

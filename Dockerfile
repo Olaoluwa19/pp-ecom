@@ -6,7 +6,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (only production)
+# Update npm and install dependencies (only production)
+# RUN npm install -g npm@11.3.0
 RUN npm install --omit=dev
 
 # Copy application code
@@ -28,6 +29,10 @@ EXPOSE 8000
 
 # Start the application
 CMD ["npm", "start"]
+
+# Alternatively, if using PM2 for process management, uncomment the following line:
+  
+# CMD ["pm2-runtime", "ecosystem.config.js", "--env", "production"]
 
 # Optional: Add health check
 HEALTHCHECK --interval=30s --timeout=3s \
