@@ -15,7 +15,10 @@
     "pm2:start:dev": "pm2 start ecosystem.config.js --env development",
     "pm2:reload": "pm2 reload ecosystem.config.js",
     "pm2:reload:prod": "pm2 reload ecosystem.config.js --env production",
-    "pm2:reload:dev": "pm2 reload ecosystem.config.js --env development"
+    "pm2:reload:dev": "pm2 reload ecosystem.config.js --env development",
+    "docker:build": "docker-compose up --build",
+    "docker:start": "docker-compose start",
+    "docker:stop": "docker-compose stop"
   },
   "author": "Oluwadurotimi Oladapo",
   "license": "ISC",
