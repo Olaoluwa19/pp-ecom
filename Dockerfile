@@ -3,11 +3,11 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and ecosystem.config.js
 COPY package*.json ./
+COPY ecosystem.config.js ./
 
-# Update npm and install dependencies (only production)
-# RUN npm install -g npm@11.3.0
+# Install dependencies (only production)
 RUN npm install --omit=dev
 
 # Copy application code
@@ -21,18 +21,17 @@ WORKDIR /app
 # Copy only necessary files from builder stage
 COPY --from=builder /app /app
 
+# Install PM2 globally in the final image
+RUN npm install -g pm2
+
 # Run as non-root user
 USER node
 
 # Expose port
 EXPOSE 8000
 
-# Start the application
-CMD ["npm", "start"]
-
-# Alternatively, if using PM2 for process management, uncomment the following line:
-  
-# CMD ["pm2-runtime", "ecosystem.config.js", "--env", "production"]
+# Start the application with PM2
+CMD ["pm2-runtime", "ecosystem.config.js", "--env", "production"]
 
 # Optional: Add health check
 HEALTHCHECK --interval=30s --timeout=3s \
