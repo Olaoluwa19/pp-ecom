@@ -1,0 +1,518 @@
+```yaml
+openapi: 3.0.3
+info:
+  title: E-Commerce API
+  description: API documentation for an e-commerce backend application supporting user authentication, product management, order processing, and category management.
+  version: 1.0.0
+  contact:
+    name: Oluwadurotimi Oladapo
+    email: support@example.com
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.yoursite.com
+    description: Production server
+tags:
+  - name: Auth
+    description: Authentication-related endpoints (login, Google OAuth)
+  - name: Logout
+    description: Endpoints for logging out users
+  - name: Refresh
+    description: Token refresh endpoint
+  - name: Register
+    description: User registration endpoint
+  - name: Categories
+    description: Category management endpoints
+  - name: Orders
+    description: Order management endpoints
+  - name: Products
+    description: Product management endpoints
+  - name: Users
+    description: User management endpoints
+  - name: Root
+    description: Root and health check endpoints
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier for the user
+        username:
+          type: string
+          description: User's username
+        email:
+          type: string
+          description: User's email address
+        phone:
+          type: string
+          description: User's phone number
+        roles:
+          type: array
+          items:
+            type: integer
+            enum: [2000, 1995, 5919]
+          description: User roles (2000: User, 1995: Seller, 5919: Admin)
+        isSuspended:
+          type: boolean
+          description: Indicates if the user is suspended
+        address:
+          $ref: '#/components/schemas/Address'
+      required:
+        - username
+        - email
+        - phone
+        - roles
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+          description: Street address
+        apartment:
+          type: string
+          description: Apartment number
+        zip:
+          type: string
+          description: ZIP code
+        city:
+          type: string
+          description: City
+        country:
+          type: string
+          description: Country
+    Category:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier for the category
+        name:
+          type: string
+          description: Category name
+        icon:
+          type: string
+          description: Category icon URL
+        color:
+          type: string
+          description: Category color code
+      required:
+        - name
+    Product:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier for the product
+        seller:
+          type: string
+          description: ID of the seller (User with Seller role)
+        name:
+          type: string
+          description: Product name
+        description:
+          type: string
+          description: Product description
+        richDescription:
+          type: string
+          description: Detailed product description
+        image:
+          type: string
+          description: URL of the main product image
+        images:
+          type: array
+          items:
+            type: string
+          description: URLs of additional product images
+        brand:
+          type: string
+          description: Product brand
+        price:
+          type: number
+          description: Product price
+        category:
+          $ref: '#/components/schemas/Category'
+        countInStock:
+          type: integer
+          description: Number of items in stock
+        rating:
+          type: number
+          description: Product rating
+        numReviews:
+          type: integer
+          description: Number of reviews
+        isFeatured:
+          type: boolean
+          description: Indicates if the product is featured
+      required:
+        - seller
+        - name
+        - description
+        - category
+        - countInStock
+    Order:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier for the order
+        orderItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+          description: List of order items
+        shippingAddress1:
+          $ref: '#/components/schemas/Address'
+        shippingAddress2:
+          $ref: '#/components/schemas/Address'
+        phone:
+          type: string
+          description: Contact phone number
+        status:
+          type: string
+          enum: [Pending, Confirmed, Shipped, Delivered, Cancelled]
+          description: Order status
+        totalPrice:
+          type: number
+          description: Total price of the order
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+        - orderItems
+        - shippingAddress1
+        - phone
+        - status
+        - user
+    OrderItem:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier for the order item
+        quantity:
+          type: integer
+          description: Quantity of the product
+        product:
+          $ref: '#/components/schemas/Product'
+      required:
+        - quantity
+        - product
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the request was successful
+        message:
+          type: string
+          description: Error message
+    LoginRequest:
+      type: object
+      properties:
+        user:
+          type: string
+          description: Username, email, or phone number
+        email:
+          type: string
+          description: User's email
+        phone:
+          type: string
+          description: User's phone number
+        password:
+          type: string
+          description: User's password
+      required:
+        - password
+      oneOf:
+        - required: [user]
+        - required: [email]
+        - required: [phone]
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+    RegisterRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          description: User's username
+        email:
+          type: string
+          description: User's email
+        phone:
+          type: string
+          description: User's phone number
+        password:
+          type: string
+          description: User's password
+        address:
+          $ref: '#/components/schemas/Address'
+        roles:
+          type: integer
+          enum: [2000, 1995, 5919]
+          description: User role (2000: User, 1995: Seller, 5919: Admin)
+      required:
+        - username
+        - email
+        - phone
+        - password
+        - roles
+    CreateCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Category name
+        icon:
+          type: string
+          description: Category icon URL
+        color:
+          type: string
+          description: Category color code
+      required:
+        - name
+    UpdateCategoryRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Category ID
+        name:
+          type: string
+          description: Category name
+        icon:
+          type: string
+          description: Category icon URL
+        color:
+          type: string
+          description: Category color code
+      required:
+        - id
+    DeleteCategoryRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Category ID
+      required:
+        - id
+    CreateOrderRequest:
+      type: object
+      properties:
+        orderItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+          description: List of order items
+        shippingAddress1:
+          $ref: '#/components/schemas/Address'
+        shippingAddress2:
+          $ref: '#/components/schemas/Address'
+        phone:
+          type: string
+          description: Contact phone number
+        user:
+          type: string
+          description: User ID
+      required:
+        - orderItems
+        - shippingAddress1
+        - phone
+        - user
+    UpdateOrderStatusRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Order ID
+        status:
+          type: string
+          enum: [Pending, Confirmed, Shipped, Delivered, Cancelled]
+          description: New order status
+      required:
+        - id
+        - status
+    DeleteOrderRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Order ID
+      required:
+        - id
+    SalesByStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [Pending, Confirmed, Shipped, Delivered, Cancelled]
+          description: Order status to filter by
+    OrdersCountByStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [Pending, Confirmed, Shipped, Delivered, Cancelled]
+          description: Order status to filter by
+    CreateProductRequest:
+      type: object
+      properties:
+        seller:
+          type: string
+          description: Seller ID
+        name:
+          type: string
+          description: Product name
+        description:
+          type: string
+          description: Product description
+        richDescription:
+          type: string
+          description: Detailed product description
+        image:
+          type: string
+          format: binary
+          description: Main product image
+        brand:
+          type: string
+          description: Product brand
+        price:
+          type: number
+          description: Product price
+        category:
+          type: string
+          description: Category ID
+        countInStock:
+          type: integer
+          description: Number of items in stock
+        rating:
+          type: number
+          description: Product rating
+        numReviews:
+          type: integer
+          description: Number of reviews
+        isFeatured:
+          type: boolean
+          description: Indicates if the product is featured
+      required:
+        - seller
+        - name
+        - description
+        - category
+        - countInStock
+    UpdateProductRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Product ID
+        name:
+          type: string
+          description: Product name
+        description:
+          type: string
+          description: Product description
+        richDescription:
+          type: string
+          description: Detailed product description
+        image:
+          type: string
+          format: binary
+          description: Main product image
+        images:
+          type: array
+          items:
+            type: string
+            format: binary
+          description: Additional product images
+        brand:
+          type: string
+          description: Product brand
+        price:
+          type: number
+          description: Product price
+        category:
+          type: string
+          description: Category ID
+        countInStock:
+          type: integer
+          description: Number of items in stock
+        rating:
+          type: number
+          description: Product rating
+        numReviews:
+          type: integer
+          description: Number of reviews
+        isFeatured:
+          type: boolean
+          description: Indicates if the product is featured
+      required:
+        - id
+        - category
+    DeleteProductRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Product ID
+      required:
+        - id
+    UpdateGalleryImagesRequest:
+      type: object
+      properties:
+        images:
+          type: array
+          items:
+            type: string
+            format: binary
+          description: Additional product images (max 10)
+    UpdateUserRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: User ID
+        password:
+          type: string
+          description: New password
+        email:
+          type: string
+          description: New email
+        phone:
+          type: string
+          description: New phone number
+        address:
+          $ref: '#/components/schemas/Address'
+      required:
+        - id
+    DeleteUserRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: User ID
+      required:
+        - id
+    SuspendUserRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: User ID
+        isSuspended:
+          type: boolean
+          description: Suspension status
+      required:
+        - id
+paths:
+  $ref: './swaggerDocs/api.yaml#/paths'
+```

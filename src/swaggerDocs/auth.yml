@@ -1,0 +1,51 @@
+# This file contains the OpenAPI documentation for the authentication endpoints of the application.
+paths:
+  /auth:
+    post:
+      summary: User login
+      description: Authenticates a user and returns a JWT
+      tags:
+      - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../swagger.yaml#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid credentials or missing fields
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Incorrect password
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+  /auth/google:
+    get:
+      summary: Google OAuth login
+      description: Initiates Google OAuth authentication
+      tags:
+      - Auth
+      responses:
+        '302':
+          description: Redirects to Google authentication page
+  /auth/google/callback:
+    get:
+      summary: Google OAuth callback
+      description: Handles Google OAuth callback
+      tags:
+      - Auth
+      responses:
+        '302':
+          description: Redirects to home page on success or 404 on failure

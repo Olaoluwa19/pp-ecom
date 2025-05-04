@@ -1,0 +1,211 @@
+# Description: Swagger documentation for product-related endpoints
+paths:
+  /users:
+    get:
+      summary: Get all users
+      description: Retrieves a list of all users (Admin only)
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: Number of users
+                  users:
+                    type: array
+                    items:
+                      $ref: '../swagger.yaml#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+    put:
+      summary: Update a user
+      description: Updates an existing user
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../swagger.yaml#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/User'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '403':
+          description: Forbidden (cannot change username)
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+    delete:
+      summary: Delete a user
+      description: Deletes a user (Admin only)
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../swagger.yaml#/components/schemas/DeleteUserRequest'
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/User'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+  /users/suspend:
+    put:
+      summary: Suspend or unsuspend a user
+      description: Suspends or unsuspends a user (Admin only)
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../swagger.yaml#/components/schemas/SuspendUserRequest'
+      responses:
+        '200':
+          description: User suspension status updated
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+  /users/role/{role}:
+    get:
+      summary: Get users by role
+      description: Retrieves users with a specific role (Admin only)
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: role
+          in: path
+          required: true
+          schema:
+            type: integer
+            enum: [2000, 1995, 5919]
+            description: Role ID (2000: User, 1995: Seller, 5919: Admin)
+      responses:
+        '200':
+          description: List of users with the specified role
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: Number of users
+                  users:
+                    type: array
+                    items:
+                      $ref: '../swagger.yaml#/components/schemas/User'
+        '400':
+          description: Invalid role
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+  /users/{id}:
+    get:
+      summary: Get a user by ID
+      description: Retrieves a specific user by ID
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: User ID
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/User'
+        '400':
+          description: Invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'

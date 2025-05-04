@@ -3,8 +3,8 @@ module.exports = {
     {
       name: "server",
       script: "src/server.js",
-      instances: "1",
-      exec_mode: "fork",
+      instances: "max",
+      exec_mode: "cluster",
       watch: false,
       ignore_watch: ["src/logs/*"],
       env_production: {

@@ -1,0 +1,364 @@
+# Description: Swagger documentation for product-related endpoints
+paths:
+  /products:
+    get:
+      summary: Get all products
+      description: Retrieves a list of all products (Admin only)
+      tags:
+      - Products
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../swagger.yaml#/components/schemas/Product'
+        '204':
+          description: No products found
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+    post:
+      summary: Create a new product
+      description: Creates a new product (Seller only)
+      tags:
+      - Products
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '../swagger.yaml#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Product'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+    put:
+      summary: Update a product
+      description: Updates an existing product (Admin or Seller only)
+      tags:
+      - Products
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '../swagger.yaml#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Product'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+    delete:
+      summary: Delete a product
+      description: Deletes a product (Admin or Seller only)
+      tags:
+      - Products
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../swagger.yaml#/components/schemas/DeleteProductRequest'
+      responses:
+        '200':
+          description: Product deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Product'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+  /products/count:
+    get:
+      summary: Get total product count
+      description: Counts the total number of products (Admin or Seller only)
+      tags:
+      - Products
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Product count
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+  /products/count/{sellerid}:
+    get:
+      summary: Get seller product count
+      description: Counts the number of products for a specific seller (Admin or Seller only)
+      tags:
+      - Products
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: sellerid
+        in: path
+        required: true
+        schema:
+          type: string
+          description: Seller ID
+      responses:
+        '200':
+          description: Seller product count
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '400':
+          description: Invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+  /products/featured/{count}:
+    get:
+      summary: Get featured products
+      description: Retrieves a specified number of featured products (Admin or Seller only)
+      tags:
+      - Products
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: count
+        in: path
+        required: false
+        schema:
+          type: integer
+          description: Number of featured products to retrieve
+      responses:
+        '200':
+          description: List of featured products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../swagger.yaml#/components/schemas/Product'
+        '404':
+          description: No featured products found
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+  /products/category:
+    get:
+      summary: Get products by category
+      description: Retrieves products filtered by category IDs (Admin or Seller only)
+      tags:
+      - Products
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: categories
+        in: query
+        required: false
+        schema:
+          type: string
+          description: Comma-separated list of category IDs
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../swagger.yaml#/components/schemas/Product'
+        '400':
+          description: Invalid category ID
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+  /products/gallery-images/{id}:
+    put:
+      summary: Update product gallery images
+      description: Updates the gallery images for a product (Seller only)
+      tags:
+      - Products
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          description: Product ID
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '../swagger.yaml#/components/schemas/UpdateGalleryImagesRequest'
+      responses:
+        '201':
+          description: Gallery images updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Product'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+  /products/userproducts/{sellerid}:
+    get:
+      summary: Get seller products
+      description: Retrieves all products for a specific seller (Admin or Seller only)
+      tags:
+      - Products
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: sellerid
+        in: path
+        required: true
+        schema:
+          type: string
+          description: Seller ID
+      responses:
+        '200':
+          description: List of seller products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../swagger.yaml#/components/schemas/Product'
+        '400':
+          description: Invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+  /products/{id}:
+    get:
+      summary: Get a product by ID
+      description: Retrieves a specific product by ID (Admin or Seller only)
+      tags:
+      - Products
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          description: Product ID
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Product'
+        '400':
+          description: Invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'

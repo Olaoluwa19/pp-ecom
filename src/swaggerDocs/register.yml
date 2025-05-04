@@ -1,0 +1,33 @@
+# This file defines the API documentation for the user registration endpoint using OpenAPI 3.0 format.
+paths:
+  /register:
+    post:
+      summary: Register a new user
+      description: Creates a new user account
+      tags:
+      - Register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../swagger.yaml#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/User'
+        '400':
+          description: Invalid input or missing fields
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'

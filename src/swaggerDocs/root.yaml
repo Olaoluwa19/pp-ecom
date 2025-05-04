@@ -1,0 +1,38 @@
+# This file is part of the API documentation for the root endpoints.
+paths:
+  /:
+    get:
+      summary: Serve index page
+      description: Serves the index.html page
+      tags:
+      - Root
+      responses:
+        '200':
+          description: Index page served
+          content:
+            text/html:
+              schema:
+                type: string
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+  /health:
+    get:
+      summary: Health check
+      description: Checks the health status of the API
+      tags:
+      - Root
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK

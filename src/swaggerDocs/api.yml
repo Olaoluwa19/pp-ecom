@@ -1,0 +1,58 @@
+# This is an OpenAPI 3.0 specification file for the API documentation.
+paths:
+  /:
+    $ref: './root.yaml#/paths/~1'
+  /health:
+    $ref: './root.yaml#/paths/~1health'
+  /register:
+    $ref: './register.yaml#/paths/~1register'
+  /auth:
+    $ref: './auth.yaml#/paths/~1auth'
+  /auth/google:
+    $ref: './auth.yaml#/paths/~1auth~1google'
+  /auth/google/callback:
+    $ref: './auth.yaml#/paths/~1auth~1google~1callback'
+  /refresh:
+    $ref: './refresh.yaml#/paths/~1refresh'
+  /logout:
+    $ref: './logout.yaml#/paths/~1logout'
+  /logout/google:
+    $ref: './logout.yaml#/paths/~1logout~1google'
+  /products:
+    $ref: './products.yaml#/paths/~1products'
+  /products/count:
+    $ref: './products.yaml#/paths/~1products~1count'
+  /products/count/{sellerid}:
+    $ref: './products.yaml#/paths/~1products~1count~1{sellerid}'
+  /products/featured/{count}:
+    $ref: './products.yaml#/paths/~1products~1featured~1{count}'
+  /products/category:
+    $ref: './products.yaml#/paths/~1products~1category'
+  /products/gallery-images/{id}:
+    $ref: './products.yaml#/paths/~1products~1gallery-images~1{id}'
+  /products/userproducts/{sellerid}:
+    $ref: './products.yaml#/paths/~1products~1userproducts~1{sellerid}'
+  /products/{id}:
+    $ref: './products.yaml#/paths/~1products~1{id}'
+  /categories:
+    $ref: './categories.yaml#/paths/~1categories'
+  /categories/{id}:
+    $ref: './categories.yaml#/paths/~1categories~1{id}'
+  /orders:
+    $ref: './orders.yaml#/paths/~1orders'
+  /orders/count-by-status:
+    $ref: './orders.yaml#/paths/~1orders~1count-by-status'
+  /orders/sales-by-status:
+    $ref: './orders.yaml#/paths/~1orders~1sales-by-status'
+  /orders/user-orders/{userid}:
+    $ref: './orders.yaml#/paths/~1orders~1user-orders~1{userid}'
+  /orders/{id}:
+    $ref: './orders.yaml#/paths/~1orders~1{id}'
+  /users:
+    $ref: './users.yaml#/paths/~1users'
+  /users/suspend:
+    $ref: './users.yaml#/paths/~1users~1suspend'
+  /users/role/{role}:
+    $ref: './users.yaml#/paths/~1users~1role~1{role}'
+  /users/{id}:
+    $ref: './users.yaml#/paths/~1users~1{id}'

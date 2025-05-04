@@ -1,0 +1,31 @@
+```yaml
+paths:
+  /logout:
+    get:
+      summary: Logout user
+      description: Clears the refresh token cookie
+      tags:
+        - Logout
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+  /logout/google:
+    get:
+      summary: Google OAuth logout
+      description: Logs out a user authenticated via Google OAuth
+      tags:
+        - Logout
+      responses:
+        '302':
+          description: Redirects to home page
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '../swagger.yaml#/components/schemas/Error'
+```
