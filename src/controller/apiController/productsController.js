@@ -9,7 +9,7 @@ const {
   updateProductImages,
 } = require("../../services/productUtils");
 
-const { findSellerById } = require("../../services/userUtils");
+const { findUserById } = require("../../services/userUtils");
 
 const { findCategoryById } = require("../../services/categoryUtils");
 const {
@@ -48,7 +48,7 @@ const createNewProduct = async (req, res) => {
     return responseMessage(res, 400, false, `Invalid seller ID: ${seller}.`);
 
   // check if seller exists
-  const validSeller = await findSellerById(seller);
+  const validSeller = await findUserById(seller);
   if (!validSeller)
     return responseMessage(
       res,
@@ -76,7 +76,7 @@ const createNewProduct = async (req, res) => {
       "No Category matches the ID provided"
     );
 
-  const uploadedImage = await getImage({ body: { ...image } });
+  const uploadedImage = await getImage(req);
   try {
     const result = await createProductFields(req, uploadedImage);
 

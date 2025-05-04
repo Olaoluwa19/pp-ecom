@@ -11,7 +11,7 @@ const findAllProductsAndPopulateCategory = async () => {
 
 const createProductFields = async (req, image) => {
   return await Product.create({
-    user: req.body.user,
+    seller: req.body.seller,
     name: req.body.name,
     image,
     description: req.body.description,

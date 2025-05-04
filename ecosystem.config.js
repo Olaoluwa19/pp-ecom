@@ -3,16 +3,17 @@ module.exports = {
     {
       name: "server",
       script: "src/server.js",
-      instances: "max", // "1" for production
-      exec_mode: "cluster", // "fork" for production
-      watch: process.env.NODE_ENV !== "production",
+      instances: "1",
+      exec_mode: "fork",
+      watch: false,
+      ignore_watch: ["src/logs/*"],
       env_production: {
         NODE_ENV: "production",
         PORT: 8000,
       },
       env_development: {
         NODE_ENV: "development",
-        PORT: 3000,
+        PORT: 8000,
       },
       max_memory_restart: "750M",
       autorestart: true,

@@ -11,10 +11,10 @@ services:
     volumes:
       - ./src/logs:/app/src/logs
     ports:
-      - "8000:8000" # Map host port 8000 to container port 8000 (used by ecosystem.config.js)
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
+      - "3000:8000" # Map host port 3000 to container port 8000 (used by ecosystem.config.js)
+    # dns:
+    #   - 8.8.8.8
+    #   - 8.8.4.4
     networks:
       - app-network
     restart: unless-stopped
