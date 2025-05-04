@@ -24,6 +24,11 @@ COPY --from=builder /app /app
 # Install PM2 globally in the final image
 RUN npm install -g pm2
 
+# Create uploads directory and set permissions
+RUN mkdir -p /app/src/public/uploads \
+    && chown -R node:node /app/src/public \
+    && chmod -R 775 /app/src/public
+
 # Run as non-root user
 USER node
 
