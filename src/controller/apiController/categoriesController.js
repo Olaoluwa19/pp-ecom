@@ -7,20 +7,34 @@ const {
   updateAndSaveCategoryFields,
 } = require("../../services/categoryUtils");
 const { responseMessage, validMongooseId } = require("../../services/utils");
+const Product = require("../../model/apiModel/Product");
 
 const getAllCategories = async (req, res) => {
   // find all categories
   const categoryList = await findCategory();
   if (!categoryList)
-    return responseMessage(res, 204, false, "No Categories Found.");
+    return responseMessage(res, 404, false, "No Categories Found.");
 
-  res.json(categoryList);
+  //count categories
+  const categoryCount = categoryList.length;
+
+  res.json({ categoryCount, categoryList });
 };
 
 const createNewCategory = async (req, res) => {
   // check if name is provided.
   if (!req?.body?.name) {
     return responseMessage(res, 400, false, "Name required to create category");
+  }
+
+  const duplicateCategory = await findCategory({ name: req.body.name });
+  if (duplicateCategory) {
+    return responseMessage(
+      res,
+      409,
+      false,
+      `${req.body.name} category already exists.`
+    );
   }
   try {
     // create category field
@@ -53,7 +67,12 @@ const updateCategory = async (req, res) => {
   const category = await findCategoryById(id);
 
   if (!category)
-    return responseMessage(res, 204, false, `No category found with ID: ${id}`);
+    return responseMessage(
+      res,
+      404,
+      false,
+      `Category ID: ${id} does not exist.`
+    );
 
   try {
     //update and save Category
@@ -85,7 +104,7 @@ const deleteCategory = async (req, res) => {
   if (!category) {
     return responseMessage(
       res,
-      204,
+      404,
       false,
       `No category ID matches ${req.body.id}.`
     );
@@ -108,9 +127,13 @@ const getCategory = async (req, res) => {
   // find category by ID.
   const category = await findCategoryById(id);
   if (!category) {
-    return responseMessage(res, 204, false, `No Category ID matches ${id}.`);
+    return responseMessage(res, 404, false, `No Category ID matches ${id}.`);
   }
-  res.json(category);
+
+  const products = await Product.find({ category: id });
+  const productCount = products.length;
+
+  res.json({ productCount, category });
 };
 
 module.exports = {

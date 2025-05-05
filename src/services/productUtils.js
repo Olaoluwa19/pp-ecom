@@ -1,5 +1,4 @@
 const Product = require("../model/apiModel/Product");
-const User = require("../model/User");
 
 const findProductById = async (id) => {
   return await Product.findOne({ _id: id }).exec();
