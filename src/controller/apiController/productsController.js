@@ -21,17 +21,22 @@ const {
 } = require("../../services/utils");
 
 const getAllProduct = async (req, res) => {
-  // find all products
-  const products = await findAllProductsAndPopulateCategory();
-  if (!products) {
-    return responseMessage(res, 204, false, "No Products found.");
-  }
+  try {
+    // find all products
+    const products = await findAllProductsAndPopulateCategory();
+    if (!products) {
+      return responseMessage(res, 204, false, "No Products found.");
+    }
+    const productsCount = products.length;
 
-  res.json(products);
+    res.json({ productsCount, products });
+  } catch (error) {
+    return serverErrorMessage(res, error);
+  }
 };
 
 const createNewProduct = async (req, res) => {
-  const { seller, name, image, description, countInStock, category } = req.body;
+  const { seller, name, description, countInStock, category } = req.body;
 
   // check for required fields
   if (!seller || !name || !description || !countInStock || !category) {
@@ -169,46 +174,6 @@ const deleteProduct = async (req, res) => {
   res.json(result);
 };
 
-const getProductCount = async (req, res) => {
-  try {
-    const count = await Product.countDocuments();
-
-    return responseMessage(
-      res,
-      200,
-      true,
-      `There are ${count} products in the database.`
-    );
-  } catch (error) {
-    return serverErrorMessage(res, error);
-  }
-};
-
-const countSellerProduct = async () => {
-  const sellerid = req.params.sellerid;
-  if (!validMongooseId(sellerid))
-    responseMessage(
-      res,
-      400,
-      false,
-      `The ID: ${sellerid} provided is an invalid ID.`
-    );
-
-  try {
-    const productCount = await Product.countDocuments({ seller: sellerid });
-
-    if (productCount)
-      return responseMessage(
-        res,
-        200,
-        false,
-        `This Seller: ${sellerid} has ${productCount} products in database.`
-      );
-  } catch (error) {
-    return serverErrorMessage(res, error);
-  }
-};
-
 const getFeaturedProduct = async (req, res) => {
   const count = req?.params?.count ? req.params.count : 0;
   const numberOfFeaturedProduct = await Product.countDocuments({
@@ -228,7 +193,7 @@ const getFeaturedProduct = async (req, res) => {
       });
     }
 
-    res.json(featureProducts);
+    res.json({ numberOfFeaturedProduct, featureProducts });
   } catch (error) {
     return serverErrorMessage(res, error);
   }
@@ -253,67 +218,31 @@ const getProductCategory = async (req, res) => {
   res.json(productCategory);
 };
 
-const updateGalleryImages = async (req, res) => {
-  // check if product ID is present
-  if (!req?.params?.id)
-    return responseMessage(res, 400, false, "Product ID is required.");
-
-  // get product by ID
-  const product = await findProductById(req.params.id);
-  if (!product) {
-    return responseMessage(
-      res,
-      400,
-      false,
-      `No product matches the ID ${req.params.id}.`
-    );
-  }
-
-  if (!validMongooseId(req.params.id))
-    return responseMessage(
-      res,
-      400,
-      false,
-      `Invalid product ID: ${req.params.id}.`
-    );
-
-  // check if image files are present
-  const files = req.files;
-  if (!files) return responseMessage(res, 400, false, "No files detected.");
-  if (files.length > 10)
-    responseMessage(res, 400, false, "Maximum of 10 files allowed.");
-
-  try {
-    // get image files
-    const imagePaths = await getGalleryImages(req);
-
-    // upload images to db
-    const result = await updateProductImages(req, product, imagePaths);
-    res.status(201).json(result);
-  } catch (error) {
-    return serverErrorMessage(res, error);
-  }
-};
-
 const getSellerProducts = async (req, res) => {
+  const { seller } = req.params;
+  console.log(seller);
+
+  if (!seller)
+    return responseMessage(res, 400, false, "Seller ID is required.");
+
+  if (!validMongooseId(seller))
+    return responseMessage(
+      res,
+      400,
+      false,
+      `The ID: ${seller} provided is an invalid ID.`
+    );
+
   try {
-    const sellerid = req.params.sellerid;
-    if (!validMongooseId(sellerid))
-      responseMessage(
-        res,
-        400,
-        false,
-        `The ID: ${sellerid} provided is an invalid ID.`
-      );
-    const sellerProducts = await Product.find({ seller: sellerid })
+    const sellerProducts = await Product.find({ seller: seller })
       .populate("category")
       .sort({ createdAt: -1 })
       .exec();
-    if (!sellerProducts || sellerProducts.length === 0) {
-      return responseMessage(res, 400, false, `No products found.`);
-    }
+
     console.log(sellerProducts);
-    res.json(sellerProducts);
+    const sellerProductCount = sellerProducts.length;
+
+    return res.json({ sellerProductCount, sellerProducts });
   } catch (error) {
     return serverErrorMessage(res, error);
   }
@@ -343,11 +272,8 @@ module.exports = {
   createNewProduct,
   updateProduct,
   deleteProduct,
-  getProductCount,
-  countSellerProduct,
   getFeaturedProduct,
   getProductCategory,
   getProduct,
-  updateGalleryImages,
   getSellerProducts,
 };

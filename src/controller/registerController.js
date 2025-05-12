@@ -1,4 +1,8 @@
-const { validatePassword, responseMessage } = require("../services/utils");
+const {
+  validatePassword,
+  responseMessage,
+  serverErrorMessage,
+} = require("../services/utils");
 const {
   checkDuplicateUser,
   createUserFields,
@@ -69,13 +73,7 @@ const createNewUser = async (req, res) => {
     console.log(populatedUser);
     return res.status(201).json(populatedUser);
   } catch (error) {
-    console.log(error);
-    return responseMessage(
-      res,
-      400,
-      false,
-      `Error creating user: ${error.message}`
-    );
+    return serverErrorMessage(res, error);
   }
 };
 

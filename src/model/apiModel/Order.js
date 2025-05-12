@@ -3,6 +3,10 @@ const Schema = mongoose.Schema;
 
 const orderSchema = Schema(
   {
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
     orderItems: [
       {
         type: Schema.ObjectId,
@@ -31,10 +35,6 @@ const orderSchema = Schema(
     },
     totalPrice: {
       type: Number,
-    },
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
     },
   },
   { timestamps: true }

@@ -6,8 +6,13 @@ const {
   deleteCategoryField,
   updateAndSaveCategoryFields,
 } = require("../../services/categoryUtils");
-const { responseMessage, validMongooseId } = require("../../services/utils");
+const {
+  responseMessage,
+  validMongooseId,
+  serverErrorMessage,
+} = require("../../services/utils");
 const Product = require("../../model/apiModel/Product");
+const Category = require("../../model/apiModel/Category");
 
 const getAllCategories = async (req, res) => {
   // find all categories
@@ -23,31 +28,21 @@ const getAllCategories = async (req, res) => {
 
 const createNewCategory = async (req, res) => {
   // check if name is provided.
-  if (!req?.body?.name) {
+  const { name } = req.body;
+  if (!name) {
     return responseMessage(res, 400, false, "Name required to create category");
   }
 
-  const duplicateCategory = await findCategory({ name: req.body.name });
+  const duplicateCategory = await Category.find({ name: name });
   if (duplicateCategory) {
-    return responseMessage(
-      res,
-      409,
-      false,
-      `${req.body.name} category already exists.`
-    );
+    return responseMessage(res, 400, false, `${name} category already exists.`);
   }
   try {
     // create category field
     const result = await createCategoryFields(req);
     res.status(201).json(result);
   } catch (error) {
-    console.error(error);
-    return responseMessage(
-      res,
-      400,
-      false,
-      `Error creating category: ${error.message}`
-    );
+    return serverErrorMessage(res, error);
   }
 };
 
@@ -79,13 +74,7 @@ const updateCategory = async (req, res) => {
     const result = await updateAndSaveCategoryFields(category, req);
     res.json(result);
   } catch (error) {
-    console.error(error);
-    return responseMessage(
-      res,
-      400,
-      false,
-      `Error updating category: ${error.message}`
-    );
+    return serverErrorMessage(res, error);
   }
 };
 
