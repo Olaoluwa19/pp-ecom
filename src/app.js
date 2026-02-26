@@ -51,7 +51,7 @@ app.get("/health", (req, res) => res.json({ status: "OK" }));
 // ROUTE
 app.use("/", require("./routes/api"));
 
-app.all("/{*path}", (req, res) => {
+app.all("/*path", (req, res) => {
   res.status(404);
   if (req.accepts("html")) {
     res.sendFile(path.join(__dirname, "views", "404.html"));
